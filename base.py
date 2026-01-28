@@ -1,5 +1,6 @@
 import pygame
 import os
+from player import * 
 
 # Initialisation de Pygame
 pygame.init()
@@ -34,7 +35,7 @@ pygame.display.set_caption(f'{GameName} v{GameVersion} - {TabState}')
 
 # CHANGEMENT DE PHASE
 
-def set_phase(new_phase, lapemon_id=None):
+def set_phase(new_phase):
     global phase
 
     phase = new_phase
@@ -57,12 +58,15 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        screen.fill(BLACK)
+        screen.fill(WHITE)
 
         # MENU
 
         if phase == "menu":
             pass
+
+        if phase == "game":
+            screen.blit(x,y)
 
         elif phase == "lapemon":
             pass

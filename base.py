@@ -33,7 +33,6 @@ posY = HEIGHT // 2 - Dresseur.texture.get_height() // 2
 
 map = world_map
 
-tilemap = ["grass","grass2","water","wood"]
 tile_size = WIDTH // len(map[0])
 
 
@@ -53,17 +52,14 @@ def set_phase(new_phase):
     if phase == "game":
         pass
 
-def assemble_tilemap(tile):
-    return pygame.transform.scale(pygame.image.load(f"sprites/tilemap/{tile}.png"), (tile_size, tile_size)).convert()
 
 # À faire AVANT la boucle while
-textures = [assemble_tilemap(name) for name in tilemap]
 
 def draw_map():
     for y, line in enumerate(map):
         for x, case in enumerate(line):
             # On utilise l'image déjà chargée et redimensionnée
-            screen.blit(textures[case], (x * tile_size, y * tile_size))
+            screen.blit(get_tile(case), (x * tile_size, y * tile_size))
 
 # BOUCLE PRINCIPALE
 

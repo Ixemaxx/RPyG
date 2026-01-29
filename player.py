@@ -19,7 +19,6 @@ class Player:
         self.team = []
         for i in range(6):
             self.team.append(None)
-        print(self.team)
 
     def update(self, keys):
 
@@ -31,4 +30,4 @@ class Player:
 
 
 # Création des deux personnages
-Dresseur = Player(sprite=pygame.image.load("sprites/tilemap/wood2.png"), username="Ixemax")
+Dresseur = Player(sprite=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax")

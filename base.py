@@ -28,12 +28,16 @@ GameName = "PyKemon"
 GameVersion = 0
 TabState = "Loading"
 
-posX = WIDTH // 2 - Dresseur.texture.get_width() // 2
-posY = HEIGHT // 2 - Dresseur.texture.get_height() // 2
+posX = WIDTH // 2 - Dresseur.sprite.get_width() // 2
+posY = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
 
 map = world_map
 
 tile_size = WIDTH // len(map[0])
+
+# variables anim (déplacement joueur)
+dresseur_anim = [i for i in range(16)]
+print(dresseur_anim)
 
 
 # Image de fond
@@ -58,8 +62,22 @@ def set_phase(new_phase):
 def draw_map():
     for y, line in enumerate(map):
         for x, case in enumerate(line):
-            # On utilise l'image déjà chargée et redimensionnée
-            screen.blit(get_tile(case), (x * tile_size, y * tile_size))
+            # On récupère la surface pré-découpée
+            tile_image = get_tile(case) 
+            # Calcul de la position à l'écran
+            screen.blit(tile_image, (x * tile_size, y * tile_size))
+
+def get_sprite(sprite_sheet, case):
+    global dresseur_anim
+
+    width = sprite_sheet.get_width()
+    coeff = 1.3 #coeff multiplicateur de taille
+
+    rect = pygame.Rect(case // 4 * width // 4, case // 4 * width // 4, width // 4, width // 4) 
+    portion = pygame.transform.scale(sprite_sheet.subsurface(rect), (64 * coeff, 80 * coeff))
+    return portion
+
+
 
 # BOUCLE PRINCIPALE
 
@@ -68,6 +86,7 @@ def main():
 
     clock = pygame.time.Clock()
     running = True
+    Dresseur.sprite = get_sprite(Dresseur.sprite,0)
 
     while running:
         clock.tick(60)
@@ -87,7 +106,7 @@ def main():
             pass
 
         if phase == "game":
-            screen.blit(Dresseur.texture,(posX, posY))
+            screen.blit(Dresseur.sprite,(posX, posY))
 
         elif phase == "lapemon":
             pass

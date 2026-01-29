@@ -12,9 +12,10 @@ DARK_ORANGE = (251, 133, 43)
 DARK_RED = (166, 23, 23)
 
 class Player:
-    def __init__(self, sprite, username = "Red", team = None, inv = None):
+    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None):
 
-        self.sprite = sprite #alpha pour retirer le fond blanc
+        self.sprite_sheet = sprite_sheet #alpha pour retirer le fond blanc
+        self.sprite = sprite_sheet #provisoire, le temps d'appeler get_sprite()
         self.username = username
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
@@ -22,7 +23,7 @@ class Player:
         for i in range(6):
             self.team.append(None)
 
-    def update(self, keys):
+    def update(self, keys, dt):
 
         if self.able:
             if keys[self.left]:
@@ -32,5 +33,5 @@ class Player:
 
 
 # Création des deux personnages
-Dresseur = Player(sprite=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
+Dresseur = Player(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)

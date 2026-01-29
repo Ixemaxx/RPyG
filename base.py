@@ -67,14 +67,16 @@ def draw_map():
             # Calcul de la position à l'écran
             screen.blit(tile_image, (x * tile_size, y * tile_size))
 
+
 def get_sprite(sprite_sheet, case):
-    global dresseur_anim
+    global dresseur_anim, posX, posY
 
     width = sprite_sheet.get_width()
     coeff = 1.3 #coeff multiplicateur de taille
+    sized_sheet = pygame.transform.scale(sprite_sheet, (100,100)) # fait en sorte que la grille soit carrée
 
     rect = pygame.Rect(case // 4 * width // 4, case // 4 * width // 4, width // 4, width // 4) 
-    portion = pygame.transform.scale(sprite_sheet.subsurface(rect), (64 * coeff, 80 * coeff))
+    portion = pygame.transform.scale(sized_sheet.subsurface(rect), (64 * coeff, 80 * coeff))
     return portion
 
 
@@ -86,10 +88,16 @@ def main():
 
     clock = pygame.time.Clock()
     running = True
+
+    #on définit la position du joueur (centre) ainsi que son sprite
     Dresseur.sprite = get_sprite(Dresseur.sprite,0)
+    posX = WIDTH // 2 - Dresseur.sprite.get_width() // 2
+    posY = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
 
     while running:
         clock.tick(60)
+        keys = pygame.key.get_pressed()
+        dt = clock.tick(60) / 1000
         mouse_pos = pygame.mouse.get_pos()
         mouse_click = pygame.mouse.get_pressed()[0]
 
@@ -107,6 +115,8 @@ def main():
 
         if phase == "game":
             screen.blit(Dresseur.sprite,(posX, posY))
+
+            Dresseur.update(keys, dt)
 
         elif phase == "lapemon":
             pass

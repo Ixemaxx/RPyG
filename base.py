@@ -93,11 +93,13 @@ def main():
     Dresseur.sprite = get_sprite(Dresseur.sprite,0)
     posX = WIDTH // 2 - Dresseur.sprite.get_width() // 2
     posY = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
+    Dresseur.x = posX
+    Dresseur.y = posY
 
     while running:
-        clock.tick(60)
         keys = pygame.key.get_pressed()
-        dt = clock.tick(60) / 1000
+        dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
+
         mouse_pos = pygame.mouse.get_pos()
         mouse_click = pygame.mouse.get_pressed()[0]
 
@@ -114,16 +116,15 @@ def main():
             pass
 
         if phase == "game":
-            screen.blit(Dresseur.sprite,(posX, posY))
-
             Dresseur.update(keys, dt)
+            screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y)))
 
         elif phase == "lapemon":
             pass
 
         ## Lignes pour visualiser le centre de l'écran
-        pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))
-        pygame.draw.rect(screen, RED, pygame.Rect(0,HEIGHT/2,WIDTH,1))
+        #pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))
+        #pygame.draw.rect(screen, RED, pygame.Rect(0,HEIGHT/2,WIDTH,1))
 
         # Affichage des FPS
         pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')

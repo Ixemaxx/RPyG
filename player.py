@@ -11,6 +11,9 @@ ORANGE = (251, 161, 43)
 DARK_ORANGE = (251, 133, 43)
 DARK_RED = (166, 23, 23)
 
+keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
+speed =360
+
 class Player:
     def __init__(self, sprite_sheet, username = "Red", team = None, inv = None):
 
@@ -24,12 +27,22 @@ class Player:
             self.team.append(None)
 
     def update(self, keys, dt):
+        global speed 
 
         if self.able:
-            if keys[self.left]:
-                pass
-            elif keys[self.right]:
-                pass
+            if keys[keymap["left"]]:
+                self.x -= speed * dt
+            if keys[keymap["right"]]:
+                self.x += speed * dt
+            if keys[keymap["up"]]:
+                self.y -= speed * dt
+            if keys[keymap["down"]]:
+                self.y += speed * dt
+            elif keys[keymap["e"]]:
+                speed = 420
+
+            #self.x += dx
+            #self.y += dy
 
 
 # Création des deux personnages

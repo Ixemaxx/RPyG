@@ -36,7 +36,7 @@ map = world_map
 tile_size = WIDTH // len(map[0])
 
 # variables anim (déplacement joueur)
-dresseur_anim = [i for i in range(16)]
+dresseur_anim = []
 
 
 # Image de fond
@@ -89,11 +89,10 @@ def main():
     running = True
 
     #on définit la position du joueur (centre) ainsi que son sprite
-    Dresseur.sprite = get_sprite(Dresseur.sprite,0)
-    posX = WIDTH // 2 - Dresseur.sprite.get_width() // 2
-    posY = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
-    Dresseur.x = posX
-    Dresseur.y = posY
+    Dresseur.x = WIDTH // 2 - Dresseur.sprite.get_width() // 2
+    Dresseur.y = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
+
+    Dresseur.extract_anim()
 
     while running:
         keys = pygame.key.get_pressed()

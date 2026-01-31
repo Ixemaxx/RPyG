@@ -14,6 +14,7 @@ DARK_RED = (166, 23, 23)
 
 keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
 speed =360
+anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
 
 anims = {
             "idle_d": [0],
@@ -50,8 +51,15 @@ class Player:
         for i in range(6):
             self.team.append(None)
 
+    def extract_anim(self):
+        global anim_list
 
-    def get_animation_frame(self, id, dt):
+        for i in range(16):
+            rect = pygame.Rect((i % 4) * (width // 4), (i // 4) * (width // 4), width // 4, width // 4)
+            anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff)))
+
+
+    def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef)
 
         if self.anim != id:
             self.anim = id
@@ -68,8 +76,7 @@ class Player:
             self.curr_frame = 0
 
         sprite = self.frames[self.curr_frame]
-        rect = pygame.Rect((sprite % 4) * (width // 4), (sprite // 4) * (width // 4), width // 4, width // 4)
-        self.sprite = pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff))
+        self.sprite = anim_list[sprite]
 
     def update(self, keys, dt):
         global speed
@@ -106,11 +113,11 @@ class Player:
                     self.y += dy
 
                 id = f"walk_{self.dir}"
-                self.get_animation_frame(id, dt)
+                self.animate_dresseur(id)
             else:
                 self.moving = False
                 id = f"idle_{self.dir}"
-                self.get_animation_frame(id, dt)
+                self.animate_dresseur(id)
 
             
                 

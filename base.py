@@ -37,7 +37,6 @@ tile_size = WIDTH // len(map[0])
 
 # variables anim (déplacement joueur)
 dresseur_anim = [i for i in range(16)]
-print(dresseur_anim)
 
 
 # Image de fond

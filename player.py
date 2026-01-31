@@ -98,9 +98,9 @@ class Player:
                     self.x += dx * 2/3
                     self.y += dy * 2/3
                     if dy >0:
-                        self.dir = 'u'
+                        self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
                     else:
-                        self.dir = 'd'
+                        self.dir = 'u'
                 else:
                     self.x += dx
                     self.y += dy

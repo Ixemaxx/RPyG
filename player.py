@@ -78,7 +78,45 @@ class Player:
         sprite = self.frames[self.curr_frame]
         self.sprite = anim_list[sprite]
 
-    def update(self, keys, dt):
+    def IsFuturePosAllowed(self, dx, dy, world_map):
+        # On définit la largeur et hauteur du sprite pour les calculs
+        sprite_w = 64 * self.coeff
+        sprite_h = 80 * self.coeff
+
+        tile_size = 1920 // 16
+
+        # On calcule la position future du "bas" du personnage (ses pieds)
+        # On prend le centre horizontal (x + largeur/2) 
+        # et le bas vertical (y + hauteur)
+        feet_x = self.x + dx + (sprite_w / 4) # pied gauche
+        feet_x2 = self.x + dx + (sprite_w * 3/4) # pied droit
+        feet_y = self.y + dy + sprite_h
+
+        # Conversion en indices de map
+        col = int(feet_x // tile_size) # col pied gauche
+        col2 = int(feet_x2 // tile_size) # col pied droit
+        row = int(feet_y // tile_size)
+
+        # Vérification des limites
+        if 0 <= row < len(world_map) and 0 <= col <= col2 < len(world_map[0]):
+            tile_value = world_map[row][col]
+            
+            # Liste des tiles bloquantes (à adapter selon tes besoins)
+            # Par exemple, si 0 est de l'herbe et tout le reste bloque :
+            tile_left = world_map[row][col]
+            tile_right = world_map[row][col2]
+
+            allowed_tile = [0,1,5,70]
+
+            # Autorisé SEULEMENT si les DEUX pieds sont sur du sol (0 ou 1)
+            if (tile_left in allowed_tile) and (tile_right in allowed_tile):
+                return True
+        
+        return False
+
+        
+
+    def update(self, keys, dt, map):
         global speed
 
         if self.able:
@@ -102,15 +140,17 @@ class Player:
             if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
                 self.moving = True
                 if dx != 0 and dy != 0: #si on se déplace en diagonale, on réduit la vitesse pour éviter d'aller plus vite
-                    self.x += dx * 2/3
-                    self.y += dy * 2/3
+                    if self.IsFuturePosAllowed(dx, dy, map):
+                        self.x += dx * 2/3
+                        self.y += dy * 2/3
                     if dy >0:
                         self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
                     else:
                         self.dir = 'u'
                 else:
-                    self.x += dx
-                    self.y += dy
+                    if self.IsFuturePosAllowed(dx, dy, map):
+                        self.x += dx
+                        self.y += dy
 
                 id = f"walk_{self.dir}"
                 self.animate_dresseur(id)

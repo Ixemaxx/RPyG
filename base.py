@@ -28,10 +28,9 @@ GameName = "PyKemon"
 GameVersion = 0
 TabState = "Loading"
 
-posX = WIDTH // 2 - Dresseur.sprite.get_width() // 2
-posY = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
-
 map = world_map
+menu = None
+cooldown = 0
 
 tile_size = WIDTH // len(map[0])
 
@@ -66,24 +65,23 @@ def draw_map():
             # Calcul de la position à l'écran
             screen.blit(tile_image, (x * tile_size, y * tile_size))
 
+def set_menu(id):
+    global menu
 
-def get_sprite(sprite_sheet, case):
-    global dresseur_anim, posX, posY
-
-    width = sprite_sheet.get_width()
-    coeff = 1.3 #coeff multiplicateur de taille
-    sized_sheet = pygame.transform.scale(sprite_sheet, (100,100)) # fait en sorte que la grille soit carrée
-
-    rect = pygame.Rect(case // 4 * width // 4, case // 4 * width // 4, width // 4, width // 4) 
-    portion = pygame.transform.scale(sized_sheet.subsurface(rect), (64 * coeff, 80 * coeff))
-    return portion
-
+    if id == 0: # fermeture du menu
+        menu = None
+        Dresseur.able = True
+    else:
+        menu = id
+        Dresseur.able = False
+        
+    
 
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps
+    global fps, cooldown, menu
 
     clock = pygame.time.Clock()
     running = True
@@ -98,6 +96,17 @@ def main():
         keys = pygame.key.get_pressed()
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
+        if keys[pygame.K_ESCAPE] and cooldown <= 0:
+            cooldown = 3
+            if menu == None:
+                set_menu(1)
+            else:
+                set_menu(menu - 1)
+
+        if cooldown >= 0: #cooldown utilisé pour les menus
+            cooldown -= 0.1
+
+
         mouse_pos = pygame.mouse.get_pos()
         mouse_click = pygame.mouse.get_pressed()[0]
 
@@ -106,7 +115,6 @@ def main():
                 running = False
 
         screen.fill(WHITE)
-        draw_map()
 
         # MENU
 
@@ -114,7 +122,8 @@ def main():
             pass
 
         if phase == "game":
-            Dresseur.update(keys, dt)
+            draw_map()
+            Dresseur.update(keys, dt, map)
             screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y))) #round pour éviter les tp du joueur
 
         elif phase == "lapemon":

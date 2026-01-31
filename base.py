@@ -117,7 +117,7 @@ def main():
 
         if phase == "game":
             Dresseur.update(keys, dt)
-            screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y)))
+            screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y))) #round pour éviter les tp du joueur
 
         elif phase == "lapemon":
             pass

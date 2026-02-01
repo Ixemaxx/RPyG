@@ -1,6 +1,6 @@
 import pygame
 import os
-from player import * 
+from dresseur import * 
 from maps import *
 
 # Initialisation de Pygame
@@ -12,7 +12,10 @@ WIDTH = 1920
 HEIGHT = 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 38)
+try:
+    font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 38)
+except:
+    font = pygame.font.Font("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 38)
 
 # États
 phase = "menu"

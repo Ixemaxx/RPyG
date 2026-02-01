@@ -1,5 +1,4 @@
 import pygame
-import math
 
 pygame.init()
 
@@ -157,8 +156,6 @@ class Player:
                 self.animate_dresseur(id)
 
             
-                
-
 
 # Création des deux personnages
 Dresseur = Player(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 

@@ -13,7 +13,7 @@ DARK_ORANGE = (251, 133, 43)
 DARK_RED = (166, 23, 23)
 
 keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
-speed =360
+speed =300
 anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
 
 anims = {
@@ -59,7 +59,7 @@ class Player:
             anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff)))
 
 
-    def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef)
+    def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef) 
 
         if self.anim != id:
             self.anim = id
@@ -67,7 +67,7 @@ class Player:
             self.curr_frame = 0
             self.anim_timer = 0
 
-        self.anim_timer += 0.1
+        self.anim_timer += 0.07
         if self.anim_timer >= 1:
             self.anim_timer = 0
             self.curr_frame += 1
@@ -78,16 +78,16 @@ class Player:
         sprite = self.frames[self.curr_frame]
         self.sprite = anim_list[sprite]
 
-    def IsFuturePosAllowed(self, dx, dy, world_map):
-        # On définit la largeur et hauteur du sprite pour les calculs
+    # IA
+    def IsFuturePosAllowed(self, dx, dy, world_map): 
+
         sprite_w = 64 * self.coeff
         sprite_h = 80 * self.coeff
 
         tile_size = 1920 // 16
 
         # On calcule la position future du "bas" du personnage (ses pieds)
-        # On prend le centre horizontal (x + largeur/2) 
-        # et le bas vertical (y + hauteur)
+
         feet_x = self.x + dx + (sprite_w / 4) # pied gauche
         feet_x2 = self.x + dx + (sprite_w * 3/4) # pied droit
         feet_y = self.y + dy + sprite_h
@@ -99,10 +99,7 @@ class Player:
 
         # Vérification des limites
         if 0 <= row < len(world_map) and 0 <= col <= col2 < len(world_map[0]):
-            tile_value = world_map[row][col]
             
-            # Liste des tiles bloquantes (à adapter selon tes besoins)
-            # Par exemple, si 0 est de l'herbe et tout le reste bloque :
             tile_left = world_map[row][col]
             tile_right = world_map[row][col2]
 
@@ -134,7 +131,7 @@ class Player:
                 dy += speed * dt
                 self.dir = 'd'
             elif keys[keymap["e"]]:
-                speed = 420
+                pass
 
 
             if dx != 0 or dy != 0: #définit si le joueur bouge ou pas

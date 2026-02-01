@@ -65,6 +65,21 @@ def draw_map():
             # Calcul de la position à l'écran
             screen.blit(tile_image, (x * tile_size, y * tile_size))
 
+def draw_map():
+    map_w = 1920
+    map_h = 1080
+    map_surface = pygame.Surface((map_w,map_h))
+
+
+    for y, line in enumerate(map):
+        for x, case in enumerate(line):
+            # On récupère la surface pré-découpée
+            tile_image = get_tile(case) 
+            # Calcul de la position à l'écran
+            map_surface.blit(tile_image, (x * tile_size , y * tile_size ))
+
+    return map_surface.convert()
+
 def set_menu(id):
     global menu
 
@@ -75,8 +90,6 @@ def set_menu(id):
         menu = id
         Dresseur.able = False
         
-    
-
 
 # BOUCLE PRINCIPALE
 
@@ -91,6 +104,9 @@ def main():
     Dresseur.y = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
 
     Dresseur.extract_anim()
+    old_fps = 0 # benchmark à l'arrache pour print le fps max
+
+    current_map = draw_map()
 
     while running:
         keys = pygame.key.get_pressed()
@@ -122,7 +138,7 @@ def main():
             pass
 
         if phase == "game":
-            draw_map()
+            screen.blit(current_map,(0, 0))
             Dresseur.update(keys, dt, map)
             screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y))) #round pour éviter les tp du joueur
 
@@ -136,6 +152,9 @@ def main():
         # Affichage des FPS
         pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
         fps = int(clock.get_fps())
+        if fps > old_fps:
+            old_fps = fps
+            print(fps)
 
         pygame.display.flip()
 

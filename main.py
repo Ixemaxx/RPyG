@@ -2,6 +2,7 @@ import pygame
 import os
 from dresseur import * 
 from maps import *
+from entity import *
 
 # Initialisation de Pygame
 pygame.init()
@@ -31,7 +32,6 @@ GameName = "PyKemon"
 GameVersion = 0
 TabState = "Loading"
 
-map = world_map
 menu = None
 cooldown = 0
 
@@ -57,16 +57,6 @@ def set_phase(new_phase):
     if phase == "game":
         pass
 
-
-# À faire AVANT la boucle while
-
-def draw_map():
-    for y, line in enumerate(map):
-        for x, case in enumerate(line):
-            # On récupère la surface pré-découpée
-            tile_image = get_tile(case) 
-            # Calcul de la position à l'écran
-            screen.blit(tile_image, (x * tile_size, y * tile_size))
 
 def draw_map():
     map_w = 1920
@@ -107,9 +97,10 @@ def main():
     Dresseur.y = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
 
     Dresseur.extract_anim()
-    old_fps = 0 # benchmark à l'arrache pour print le fps max
-
+    
+    map = little_house
     current_map = draw_map()
+    current_entities = draw_entities(map) 
 
     while running:
         keys = pygame.key.get_pressed()
@@ -142,6 +133,7 @@ def main():
 
         if phase == "game":
             screen.blit(current_map,(0, 0))
+            screen.blit(current_entities,(0, 0))
             Dresseur.update(keys, dt, map)
             screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y))) #round pour éviter les tp du joueur
 
@@ -152,12 +144,6 @@ def main():
         #pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))
         #pygame.draw.rect(screen, RED, pygame.Rect(0,HEIGHT/2,WIDTH,1))
 
-        # Affichage des FPS
-        pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
-        fps = int(clock.get_fps())
-        if fps > old_fps:
-            old_fps = fps
-            print(fps)
 
         pygame.display.flip()
 

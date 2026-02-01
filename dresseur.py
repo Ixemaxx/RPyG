@@ -26,8 +26,8 @@ anims = {
             "walk_u": [5,7]
         }
 
-class Player:
-    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None):
+class Dresseur:
+    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d"):
         global width
 
         self.sprite_sheet = pygame.transform.scale(sprite_sheet, (100,100)) #alpha pour retirer le fond blanc
@@ -40,7 +40,7 @@ class Player:
         self.anim = ""
         self.frames = 1 #nb de frames de l'anim
         self.curr_frame = 0 
-        self.dir = "d" #direction du sprite
+        self.dir = dir #direction du sprite
         self.anim_timer = 0
         self.coeff = 1.3 #coeff de taille de sprite
         self.moving = False
@@ -158,5 +158,5 @@ class Player:
             
 
 # Création des deux personnages
-Dresseur = Player(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
+Dresseur = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)

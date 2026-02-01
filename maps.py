@@ -3,6 +3,7 @@ import pygame
 tilemap = []
 sprite_sheet = pygame.image.load("sprites/tilemap/Tileset.png")
 sh_width = sprite_sheet.get_width() # = la hauteur car carré
+maplist = []
 
 def tilemap_manager():
     global tilemap, sprite_sheet
@@ -22,7 +23,7 @@ def tilemap_manager():
 def get_tile(tile): #récupérer une tile dans la tilemap (liste)
     return tilemap[tile]
 
-world_map = [[67, 67, 67, 67, 67, 67, 67, 1, 67, 67, 67, 67 , 130, 130, 130, 130],\
+little_house = [[67, 67, 67, 67, 67, 67, 67, 1, 67, 67, 67, 67 , 130, 130, 130, 130],\
              [130, 130, 130, 130, 130, 130, 130, 1, 130, 130, 130, 130 , 23, 24, 25, 0],\
              [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ,0 , 87, 88, 89, 0],\
              [0, 0, 2, 3, 0, 0, 0, 1, 0, 0, 0 ,0 , 151, 152, 153, 0],\
@@ -31,6 +32,10 @@ world_map = [[67, 67, 67, 67, 67, 67, 67, 1, 67, 67, 67, 67 , 130, 130, 130, 130
              [0, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0 ,1 , 1, 1, 1, 1],\
              [0, 70, 70, 70, 70, 0, 0, 0, 0, 0, 0 ,0 , 0, 0, 0, 0],\
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ,0 , 0, 0, 0, 0]]
+
+maplist.append(little_house) # la maplist sert à gérer les entités
+
+
 
 
 tile_size = 1920 // 16 # 16 = len(world_map[0])

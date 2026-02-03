@@ -13,7 +13,6 @@ DARK_RED = (166, 23, 23)
 
 keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
 speed =300
-anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
 
 anims = {
             "idle_d": [0],
@@ -44,6 +43,7 @@ class Dresseur:
         self.anim_timer = 0
         self.coeff = 1.3 #coeff de taille de sprite
         self.moving = False
+        self.anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
 
         width = self.sprite_sheet.get_width()
 
@@ -51,11 +51,10 @@ class Dresseur:
             self.team.append(None)
 
     def extract_anim(self):
-        global anim_list
 
         for i in range(16):
             rect = pygame.Rect((i % 4) * (width // 4), (i // 4) * (width // 4), width // 4, width // 4)
-            anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff)))
+            self.anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff)))
 
 
     def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef) 
@@ -75,7 +74,7 @@ class Dresseur:
             self.curr_frame = 0
 
         sprite = self.frames[self.curr_frame]
-        self.sprite = anim_list[sprite]
+        self.sprite = self.anim_list[sprite]
 
     # IA
     def IsFuturePosAllowed(self, dx, dy, world_map): 
@@ -117,20 +116,21 @@ class Dresseur:
 
         if self.able:
             dx, dy = 0, 0
-            if keys[keymap["left"]]:
-                dx -= speed * dt
-                self.dir = "l"
-            if keys[keymap["right"]]:
-                dx += speed * dt
-                self.dir = 'r'
-            if keys[keymap["up"]]:
-                dy -= speed * dt
-                self.dir = 'u'
-            if keys[keymap["down"]]:
-                dy += speed * dt
-                self.dir = 'd'
-            elif keys[keymap["e"]]:
-                pass
+            if keys != 0:
+                if keys[keymap["left"]]:
+                    dx -= speed * dt
+                    self.dir = "l"
+                if keys[keymap["right"]]:
+                    dx += speed * dt
+                    self.dir = 'r'
+                if keys[keymap["up"]]:
+                    dy -= speed * dt
+                    self.dir = 'u'
+                if keys[keymap["down"]]:
+                    dy += speed * dt
+                    self.dir = 'd'
+                elif keys[keymap["e"]]:
+                    pass
 
 
             if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
@@ -158,5 +158,5 @@ class Dresseur:
             
 
 # Création des deux personnages
-Dresseur = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
+Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)

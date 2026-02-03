@@ -17,6 +17,8 @@ class Entity:
 
         if type == "npc":
             self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir)
+            self.npc.extract_anim()       # bug quand je le fais, ça applique le changement au joueur
+            self.npc.update(keys=0, dt=0, map=None)
 
             self.dialog = npc_dialog # le dialogue
             self.action = npc_action # dialogue 0, combat 1, échange 2, cadeau 3
@@ -25,17 +27,16 @@ class Entity:
 
 def draw_entities(map): # on obtient les entités d'une certaine map grâce à self.map
     current_entities = []
+    layer = pygame.Surface((1920,1080),pygame.SRCALPHA) # on crée une surface de la taille de l'écran
 
     for entity in entities:
         if entity.map == map:
             current_entities.append(entity)
 
-    screen = pygame.Surface((1920,1080)) # on crée une surface de la taille de l'écran
-
     for entity in current_entities:
-        screen.blit(entity.npc.sprite, (entity.x, entity.y))
+        layer.blit(entity.npc.sprite, (entity.x, entity.y))
 
-    return screen.convert_alpha()
+    return layer.convert_alpha()
 
 little_house_npc_1 = Entity(type="npc", x=500, y=400, map="little_house", state=0, npc_name="Bob", npc_dir="d", npc_sprite=pygame.transform.scale(pygame.image.load("sprites/persos/10.png"), (100,100)), npc_team=None, reward=100, npc_dialog=["Salut ! Je suis Bob.","Bienvenue dans mon humble demeure !"], npc_action=1)
 entities.append(little_house_npc_1)

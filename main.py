@@ -34,9 +34,9 @@ TabState = "Loading"
 
 menu = None
 cooldown = 0
+map = little_house
 
-tile_size = WIDTH // len(map[0])
-
+tile_size = WIDTH // 16
 # variables anim (déplacement joueur)
 dresseur_anim = []
 
@@ -78,10 +78,10 @@ def set_menu(id):
 
     if id == 0: # fermeture du menu
         menu = None
-        Dresseur.able = True
+        Player.able = True
     else:
         menu = id
-        Dresseur.able = False
+        Player.able = False
         
 
 # BOUCLE PRINCIPALE
@@ -93,12 +93,11 @@ def main():
     running = True
 
     #on définit la position du joueur (centre) ainsi que son sprite
-    Dresseur.x = WIDTH // 2 - Dresseur.sprite.get_width() // 2
-    Dresseur.y = HEIGHT // 2 - Dresseur.sprite.get_height() // 2
+    Player.x = WIDTH // 2 - Player.sprite.get_width() // 2
+    Player.y = HEIGHT // 2 - Player.sprite.get_height() // 2
 
-    Dresseur.extract_anim()
+    Player.extract_anim()
     
-    map = little_house
     current_map = draw_map()
     current_entities = draw_entities(map) 
 
@@ -133,9 +132,9 @@ def main():
 
         if phase == "game":
             screen.blit(current_map,(0, 0))
-            screen.blit(current_entities,(0, 0))
-            Dresseur.update(keys, dt, map)
-            screen.blit(Dresseur.sprite,(round(Dresseur.x), round(Dresseur.y))) #round pour éviter les tp du joueur
+            screen.blit(current_entities,(0,0))
+            Player.update(keys, dt, map)
+            screen.blit(Player.sprite,(round(Player.x), round(Player.y))) #round pour éviter les tp du joueur
 
         elif phase == "lapemon":
             pass

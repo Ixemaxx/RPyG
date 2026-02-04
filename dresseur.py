@@ -1,4 +1,5 @@
 import pygame
+from maps import *
 
 pygame.init()
 
@@ -15,8 +16,8 @@ keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pyg
 speed =300
 
 allowed_tile = [0,1,5,70] # id de cases où le joueur peut marcher (pas de collisions)
-special_tile = [2,3] # cases spéciales (bancs, portes, herbe)
-sp_tile_events = {2: ["banc",None], 3: ["banc",None]} # si l'event s'exécute sans la touche E, mettre comme 2e argument "now"
+special_tile = [2,3,282] # cases spéciales (bancs, portes, herbe)
+sp_tile_events = {2: ["banc",None], 3: ["banc",None], 282: ["warp",[lil_house,"lil_house"],"now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
 
@@ -125,8 +126,9 @@ class Dresseur:
             if sp_tile != None:
                 event = sp_tile_events[sp_tile]
                 self.interact = [event[0],event[1]]
-                if event[1] == "now":
-                    self.interact()
+                if len(event) == 3:
+                    if event[2] == "now":
+                        self.get_interaction()
 
             # Autorisé SEULEMENT si les DEUX pieds sont sur du sol (0 ou 1)
             if (tile_left in allowed_tile) and (tile_right in allowed_tile):
@@ -136,14 +138,20 @@ class Dresseur:
     
 
     def get_interaction(self): # interact est une liste de type  [type,interaction] interaction contient les infos de l'interaction
+
         type = self.interact[0] #juste le type qui détermine si c'est un item, dialogue, banc, warpzone...
         interact = self.interact[1]
 
-        if self.interact[0] == "npc":
+        if type == "npc":
             print(interact.dialog)
         
-        elif self.interact[0] == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
+        elif type == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
             print("devant un banc")
+
+        elif type == "warp":
+            map = interact[0]
+            map_name = interact[1]
+            change_map(map,map_name)
 
 
         

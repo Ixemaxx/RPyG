@@ -40,5 +40,5 @@ def draw_entities(map): # on obtient les entités d'une certaine map grâce à s
 
     return layer.convert_alpha(), current_entities
 
-little_house_npc_1 = Entity(type="npc", x=case * 9 - (case * 0.87), y=case * 5 - case // 3, map="lil_house", state=0, npc_name="Bob", npc_dir="l", npc_sprite=pygame.transform.scale(pygame.image.load("sprites/persos/10.png"), (100,100)), npc_team=None, reward=100, npc_dialog=["Salut ! Je suis Bob.","Bienvenue dans mon humble demeure !"], npc_action=1)
+little_house_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map="lil_garden", state=0, npc_name="Bob", npc_dir="l", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/10.png"), (100,100)), npc_team=None, reward=100, npc_dialog=["Salut ! Je suis Bob.","Bienvenue dans mon humble demeure !"], npc_action=1)
 entities.append(little_house_npc_1)

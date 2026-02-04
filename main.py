@@ -34,8 +34,6 @@ TabState = "Loading"
 
 menu = None
 cooldown = 0
-map = lil_garden
-map_name = "lil_garden"
 map_entities = [] # une entité = un npc ou un item, représenté par sa classe Entity
 
 tile_size = WIDTH // 16
@@ -60,21 +58,6 @@ def set_phase(new_phase):
         pass
 
 
-def draw_map():
-    map_w = 1920
-    map_h = 1080
-    map_surface = pygame.Surface((map_w,map_h))
-
-
-    for y, line in enumerate(map):
-        for x, case in enumerate(line):
-            # On récupère la surface pré-découpée
-            tile_image = get_tile(case) 
-            # Calcul de la position à l'écran
-            map_surface.blit(tile_image, (x * tile_size , y * tile_size ))
-
-    return map_surface.convert()
-
 
 def change_tab(State):
     TabState = State
@@ -94,7 +77,7 @@ def set_menu(id):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion
+    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_name, map_layer
 
     clock = pygame.time.Clock()
     running = True
@@ -104,8 +87,6 @@ def main():
     Player.y = HEIGHT // 2 - Player.sprite.get_height() // 2
 
     Player.extract_anim()
-    
-    map_layer = draw_map()
     entities_layer,current_entities = draw_entities(map_name)  
 
     change_tab(map_name)
@@ -144,6 +125,7 @@ def main():
             screen.blit(entities_layer,(0,0))
             Player.update(keys, dt, map, current_entities)
             screen.blit(Player.sprite,(round(Player.x), round(Player.y))) #round pour éviter les tp du joueur
+            print(map_name)
 
         elif phase == "lapemon":
             pass

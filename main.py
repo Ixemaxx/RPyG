@@ -34,11 +34,13 @@ TabState = "Loading"
 
 menu = None
 cooldown = 0
-map = little_house
+map = lil_garden
+map_name = "lil_garden"
+map_entities = [] # une entité = un npc ou un item, représenté par sa classe Entity
 
 tile_size = WIDTH // 16
 # variables anim (déplacement joueur)
-dresseur_anim = []
+dresseur_anim = [] 
 
 
 # Image de fond
@@ -73,6 +75,11 @@ def draw_map():
 
     return map_surface.convert()
 
+
+def change_tab(State):
+    TabState = State
+    pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
+
 def set_menu(id):
     global menu
 
@@ -87,7 +94,7 @@ def set_menu(id):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu
+    global fps, cooldown, menu, TabState, GameName, GameVersion
 
     clock = pygame.time.Clock()
     running = True
@@ -98,8 +105,10 @@ def main():
 
     Player.extract_anim()
     
-    current_map = draw_map()
-    current_entities = draw_entities(map) 
+    map_layer = draw_map()
+    entities_layer,current_entities = draw_entities(map_name)  
+
+    change_tab(map_name)
 
     while running:
         keys = pygame.key.get_pressed()
@@ -131,9 +140,9 @@ def main():
             pass
 
         if phase == "game":
-            screen.blit(current_map,(0, 0))
-            screen.blit(current_entities,(0,0))
-            Player.update(keys, dt, map)
+            screen.blit(map_layer,(0, 0))
+            screen.blit(entities_layer,(0,0))
+            Player.update(keys, dt, map, current_entities)
             screen.blit(Player.sprite,(round(Player.x), round(Player.y))) #round pour éviter les tp du joueur
 
         elif phase == "lapemon":

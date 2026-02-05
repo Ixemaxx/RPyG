@@ -1,6 +1,6 @@
 import pygame
 import os
-from dresseur import *
+import dresseur
 import maps
 from entity import *
 
@@ -13,7 +13,7 @@ WIDTH = 1920
 HEIGHT = 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-try:
+try: # windows ou linux
     font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 38)
 except:
     font = pygame.font.Font("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 38)
@@ -64,10 +64,10 @@ def set_menu(id):
 
     if id == 0: # fermeture du menu
         menu = None
-        Player.able = True
+        dresseur.dresseur.Player.able = True
     else:
         menu = id
-        Player.able = False
+        dresseur.dresseur.Player.able = False
 
 def pack_map():
     global map_layer, entities_layer, map_blit
@@ -89,10 +89,10 @@ def main():
     running = True
 
     #on définit la position du joueur (centre) ainsi que son sprite
-    Player.x = WIDTH // 2 - Player.sprite.get_width() // 2
-    Player.y = HEIGHT // 2 - Player.sprite.get_height() // 2
+    dresseur.Player.x = WIDTH // 2 - dresseur.Player.sprite.get_width() // 2
+    dresseur.Player.y = HEIGHT // 2 - dresseur.Player.sprite.get_height() // 2
 
-    Player.extract_anim()
+    dresseur.Player.extract_anim()
     entities_layer,current_entities = draw_entities(maps.map_name)  
 
     TabState = maps.map_name
@@ -140,8 +140,8 @@ def main():
 
         if phase == "game":
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
-            Player.update(keys, dt, map, current_entities)
-            screen.blit(Player.sprite,(round(Player.x), round(Player.y))) #round pour éviter les tp du joueur
+            dresseur.Player.update(keys, dt, map, current_entities)
+            screen.blit(dresseur.Player.sprite,(round(dresseur.Player.x), round(dresseur.Player.y))) #round pour éviter les tp du joueur
             #print(map_name) # attention ce print saccage les fps de loRdi
 
         elif phase == "lapemon":

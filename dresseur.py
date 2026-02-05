@@ -16,8 +16,8 @@ keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pyg
 speed = 300
 
 allowed_tile = [0,1,5,70,102] # id de cases où le joueur peut marcher (pas de collisions)
-special_tile = [2,3,282] # cases spéciales (bancs, portes, herbe)
-sp_tile_events = {2: ["banc",None], 3: ["banc",None], 282: ["warp",[maps.lil_house,"lil_house"],"now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
+special_tile = [2,3] # cases spéciales (bancs, hautes herbes)
+sp_tile_events = {2: ["banc",None], 3: ["banc",None]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
 
@@ -55,6 +55,7 @@ class Dresseur:
         self.anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
         self.interact = None
         self.cooldown = 0
+        self.state = None
 
         width = self.sprite_sheet.get_width()
 
@@ -116,8 +117,12 @@ class Dresseur:
             # Pas IA, dans le bloc IA
             for entity in entities: # vérif si il y'a une entité sur le chemin
                 if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 30) and (feet_y > entity.y + 10)):
-                    self.interact = ["npc",entity]
-                    return False
+                    if entity.type == "npc":
+                        self.interact = ["npc",entity]
+                        return False
+                    elif entity.type == "warp":
+                        self.interact = ["warp",entity,"now"]
+                        self.get_interaction()
                 
             self.interact = None
                 
@@ -154,10 +159,13 @@ class Dresseur:
                 self.state = "banc"
                 self.y -= 20
                 self.dir = "d"
-
-            elif type == "warp":
-                map = interact[0]
-                map_name = interact[1]
+                
+            elif type == "warp": # à compléter
+                # interact[1] c'est l'entité warp, qui contient les infos nécessaires pour le changement de map
+                map = interact.warp_dest 
+                map_name = interact.warp_name
+                self.x, self.y = interact.player_pos[0], interact.player_pos[1]
+                self.dir = interact.player_dir
                 maps.change_map(map,map_name)
         else:
             if self.state == "banc":

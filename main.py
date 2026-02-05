@@ -1,7 +1,7 @@
 import pygame
 import os
-from dresseur import * 
-from maps import *
+from dresseur import *
+import maps
 from entity import *
 
 # Initialisation de Pygame
@@ -44,6 +44,7 @@ dresseur_anim = []
 # Image de fond
 #bg = pygame.image.load("sprites/x.png").convert()
 #bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
+fps = 0
 pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
 
 
@@ -58,11 +59,6 @@ def set_phase(new_phase):
         pass
 
 
-
-def change_tab(State):
-    TabState = State
-    pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
-
 def set_menu(id):
     global menu
 
@@ -72,12 +68,22 @@ def set_menu(id):
     else:
         menu = id
         Player.able = False
+
+def pack_map():
+    global map_layer, entities_layer, map_blit
+
+    map_w = 1920
+    map_h = 1080
+    map_blit = pygame.Surface((map_w,map_h),pygame.SRCALPHA)
+
+    map_blit.blit(maps.map_layer,(0,0))
+    map_blit.blit(entities_layer,(0,0))
         
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_name, map_layer
+    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_name, map_layer, map_blit, entities_layer, isNewMap
 
     clock = pygame.time.Clock()
     running = True
@@ -87,9 +93,10 @@ def main():
     Player.y = HEIGHT // 2 - Player.sprite.get_height() // 2
 
     Player.extract_anim()
-    entities_layer,current_entities = draw_entities(map_name)  
+    entities_layer,current_entities = draw_entities(maps.map_name)  
 
-    change_tab(map_name)
+    TabState = maps.map_name
+    pack_map()
 
     while running:
         keys = pygame.key.get_pressed()
@@ -109,6 +116,17 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_click = pygame.mouse.get_pressed()[0]
 
+        # Dans main.py, à l'intérieur de la boucle while running :
+
+        if maps.isNewMap:
+            maps.isNewMap = False
+            TabState = maps.map_name
+            # 1. On récupère les nouvelles entités de la nouvelle map
+            entities_layer, current_entities = draw_entities(maps.map_name)  
+            # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
+            pack_map()
+    
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -121,11 +139,10 @@ def main():
             pass
 
         if phase == "game":
-            screen.blit(map_layer,(0, 0))
-            screen.blit(entities_layer,(0,0))
+            screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
             Player.update(keys, dt, map, current_entities)
             screen.blit(Player.sprite,(round(Player.x), round(Player.y))) #round pour éviter les tp du joueur
-            print(map_name)
+            #print(map_name) # attention ce print saccage les fps de loRdi
 
         elif phase == "lapemon":
             pass
@@ -134,6 +151,9 @@ def main():
         #pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))
         #pygame.draw.rect(screen, RED, pygame.Rect(0,HEIGHT/2,WIDTH,1))
 
+
+        fps = int(clock.get_fps())
+        pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
 
         pygame.display.flip()
 

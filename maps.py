@@ -1,11 +1,15 @@
 import pygame
+import os
+
 
 pygame.init()
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 tilemap = []
 sprite_sheet = pygame.image.load("sprites/tilemap/Tileset.png")
 sh_width = sprite_sheet.get_width() # = la hauteur car carré
 maplist = []
+isNewMap = False
 
 def tilemap_manager():
     global tilemap, sprite_sheet
@@ -25,7 +29,7 @@ def draw_map():
 
     map_w = 1920
     map_h = 1080
-    map_surface = pygame.Surface((map_w,map_h))
+    map_surface = pygame.Surface((map_w,map_h),pygame.SRCALPHA)
 
 
     for y, line in enumerate(map):
@@ -37,12 +41,14 @@ def draw_map():
 
     return map_surface
 
-def change_map(new_map,name):
-    global map, map_name, map_layer
+def change_map(new_map,new_name):
+    global map, map_name, map_layer, isNewMap
 
+    print("change_map")
     map = new_map
-    map_name = name
+    map_name = new_name
     map_layer = draw_map()
+    isNewMap = True
 
 
 def get_tile(tile): #récupérer une tile dans la tilemap (liste)

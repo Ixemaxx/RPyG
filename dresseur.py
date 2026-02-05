@@ -15,11 +15,13 @@ DARK_RED = (166, 23, 23)
 keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
 speed = 300
 
-allowed_tile = [0,1,5,70] # id de cases où le joueur peut marcher (pas de collisions)
+allowed_tile = [0,1,5,70,102] # id de cases où le joueur peut marcher (pas de collisions)
 special_tile = [2,3,282] # cases spéciales (bancs, portes, herbe)
 sp_tile_events = {2: ["banc",None], 3: ["banc",None], 282: ["warp",[maps.lil_house,"lil_house"],"now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
+
+dialog = False
 
 anims = {
             "idle_d": [0],
@@ -52,6 +54,7 @@ class Dresseur:
         self.moving = False
         self.anim_list = [] #liste d'animations du joueur, pour éviter le lag. Les PNJ utilisent la fonction get_animation_frame pour l'instant
         self.interact = None
+        self.cooldown = 0
 
         width = self.sprite_sheet.get_width()
 
@@ -141,26 +144,44 @@ class Dresseur:
 
         type = self.interact[0] #juste le type qui détermine si c'est un item, dialogue, banc, warpzone...
         interact = self.interact[1]
+        self.cooldown = 2.5
 
-        if type == "npc":
-            print(interact.dialog)
-        
-        elif type == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
-            print("devant un banc")
+        if self.able and not dialog:
+            if type == "npc":
+                print(interact.dialog)
+            
+            elif type == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
+                self.state = "banc"
+                self.y -= 20
+                self.dir = "d"
 
-        elif type == "warp":
-            map = interact[0]
-            map_name = interact[1]
-            maps.change_map(map,map_name)
+            elif type == "warp":
+                map = interact[0]
+                map_name = interact[1]
+                maps.change_map(map,map_name)
+        else:
+            if self.state == "banc":
+                self.y += 30
+            self.state = None
+            self.able = True
 
+        self.get_state()
+
+    def get_state(self):
+        if not dialog:
+            if self.state == "banc":
+                self.able = False
 
         
 
     def update(self, keys, dt, map, entities):
         global speed
 
+        dx, dy = 0, 0
+        if self.cooldown >= 0:
+            self.cooldown -= 0.1
+
         if self.able:
-            dx, dy = 0, 0
             if keys != 0:
                 if keys[keymap["left"]]:
                     dx -= speed * dt
@@ -175,29 +196,31 @@ class Dresseur:
                     dy += speed * dt
                     self.dir = 'd'
 
-            if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
-                self.moving = True
-                if dx != 0 and dy != 0: #si on se déplace en diagonale, on réduit la vitesse pour éviter d'aller plus vite
-                    if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
-                        self.x += dx * 2/3
-                        self.y += dy * 2/3
-                    if dy >0:
-                        self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
-                    else:
-                        self.dir = 'u'
-                else:
-                    if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
-                        self.x += dx
-                        self.y += dy
 
-                id = f"walk_{self.dir}"
-                self.animate_dresseur(id)
+        if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
+            self.moving = True
+            if dx != 0 and dy != 0: #si on se déplace en diagonale, on réduit la vitesse pour éviter d'aller plus vite
+                if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
+                    self.x += dx * 2/3
+                    self.y += dy * 2/3
+                if dy >0:
+                    self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
+                else:
+                    self.dir = 'u'
             else:
-                self.moving = False
-                id = f"idle_{self.dir}"
-                self.animate_dresseur(id)
+                if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
+                    self.x += dx
+                    self.y += dy
+
+            id = f"walk_{self.dir}"
+            self.animate_dresseur(id)
+        else:
+            self.moving = False
+            id = f"idle_{self.dir}"
+            self.animate_dresseur(id)
+
         
-        if keys != 0:
+        if keys != 0 and self.cooldown <= 0:
             if keys[keymap["e"]]: # à part, ça permet d'interagir avec des pnj, des boites de dialogue...
                 if self.interact != None:
                     self.get_interaction()

@@ -83,7 +83,7 @@ def pack_map():
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_name, map_layer, map_blit, entities_layer, isNewMap
+    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, entities_layer
 
     clock = pygame.time.Clock()
     running = True

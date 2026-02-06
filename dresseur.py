@@ -116,7 +116,15 @@ class Dresseur:
 
             # Pas IA, dans le bloc IA
             for entity in entities: # vérif si il y'a une entité sur le chemin
-                if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 30) and (feet_y > entity.y + 10)):
+
+                if entity.req_dir != None: # on vérifie si la direction et autorisée
+                    if entity.req_dir != self.dir:
+                        direction_check = False
+                else:
+                    direction_check = True
+                
+
+                if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 30) and (feet_y > entity.y + 10)) and direction_check:
                     if entity.type == "npc":
                         self.interact = ["npc",entity]
                         return False

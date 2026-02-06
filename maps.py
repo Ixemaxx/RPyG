@@ -1,5 +1,7 @@
+from cmath import rect
 import pygame
 import os
+import random # pour la rotation aléatoire
 
 
 pygame.init()
@@ -10,6 +12,9 @@ sprite_sheet = pygame.image.load("sprites/tilemap/Tileset.png")
 sh_width = sprite_sheet.get_width() # = la hauteur car carré
 maplist = []
 isNewMap = False
+rotating_tiles = [0,1]
+rotating_surface = [] # la version surface des tiles 
+rotation = [0, 90, 180, 270] # rotation en degrés à appliquer
 
 def tilemap_manager():
     global tilemap, sprite_sheet
@@ -24,6 +29,8 @@ def tilemap_manager():
             portion = pygame.transform.scale(sprite_sheet.subsurface(rect), (tile_size,tile_size))
             
             tilemap.append(portion)
+            if row * 64 + col in rotating_tiles: # si dans rotating tiles, on ajoute la surface dans rotating_surface
+                rotating_surface.append(portion)
 
 def draw_map():
 
@@ -37,7 +44,10 @@ def draw_map():
             # On récupère la surface pré-découpée
             tile_image = get_tile(case) 
             # Calcul de la position à l'écran
-            map_surface.blit(tile_image, (x * tile_size , y * tile_size ))
+            if tile_image in rotating_surface: 
+                map_surface.blit(pygame.transform.rotate(tile_image,random.choice(rotation)), (x * tile_size , y * tile_size ))
+            else:
+                map_surface.blit(tile_image, (x * tile_size , y * tile_size ))
 
     return map_surface
 

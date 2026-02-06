@@ -219,6 +219,8 @@ def main():
                 screen.blit(font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.76))
                 screen.blit(font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.82))
                 screen.blit(font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.88))
+                if dresseur.Player.interact == "dialog_end":
+                    screen.blit(font.render("...", True, WHITE), (WIDTH * 0.72, HEIGHT * 0.89))
                 
 
         elif phase == "lapemon":

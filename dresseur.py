@@ -123,12 +123,12 @@ class Dresseur:
                 else:
                     direction_check = True
                 
-
-                if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 30) and (feet_y > entity.y + 10)) and direction_check:
-                    if entity.type == "npc":
+                if entity.type == "npc":
+                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 30) and (feet_y > entity.y + 10)) and direction_check:
                         self.interact = ["npc",entity]
                         return False
-                    elif entity.type == "warp":
+                elif entity.type == "warp":
+                    if ((feet_x2 > entity.x) and (feet_x < entity.x + entity.w)) and ((feet_y < entity.y + entity.h) and (feet_y > entity.y)) and direction_check:
                         self.interact = ["warp",entity,"now"]
                         self.get_interaction()
                 

@@ -141,7 +141,7 @@ def main():
         if phase == "game":
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
             dresseur.Player.update(keys, dt, map, current_entities)
-            screen.blit(dresseur.Player.sprite,(round(dresseur.Player.x), round(dresseur.Player.y))) #round pour éviter les tp du joueur
+            screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
             #print(map_name) # attention ce print saccage les fps de loRdi
 
         elif phase == "lapemon":

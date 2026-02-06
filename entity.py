@@ -10,7 +10,7 @@ case = 120 # côté d'une tile
 
 class Entity:
     def __init__(self, type, x, y, map, state, npc_name=None, npc_dir=None, npc_sprite=None, npc_team=None, reward=None, npc_dialog = None, 
-                 npc_action = 0, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None):
+                 npc_action = 0, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None):
         self.x = x
         self.y = y
         self.type = type # npc ou item
@@ -32,7 +32,9 @@ class Entity:
             self.player_pos = warp_tp
             self.warp_name = warp_name
             self.player_dir = warp_dir
-            self.hitbox = pygame.Rect(self.x, self.y, case, case // 1.75) # hitbox de la warp zone, à ajuster selon les besoins
+            self.w = hitbox_w
+            self.h = hitbox_h
+            self.hitbox = pygame.Rect(self.x, self.y, self.w, self.h) # hitbox de la warp zone, à ajuster selon les besoins
             
 
 
@@ -54,15 +56,20 @@ def draw_entities(map): # on obtient les entités d'une certaine map grâce à s
 
     return layer, current_entities
 
-little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map="lil_garden", state=0, npc_name="Bob", npc_dir="l", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/10.png"), (100,100)), npc_team=None, reward=100, npc_dialog=["Salut ! Je suis Bob.","Bienvenue dans mon humble demeure !"], npc_action=1)
+little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_garden",\
+                              state = 0, npc_name = "Bob", npc_dir = "l", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/10.png"),\
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Salut ! Je suis Bob.","Bienvenue dans mon humble demeure !"], npc_action = 1)
+
 entities.append(little_garden_npc_1)
 
-little_garden_warp_1 = Entity(type = "warp", x = case * 13, y = case * 5 , map="lil_garden", state=0, warp_dest=maps.lil_house, warp_name="lil_house", warp_tp=(case * 15 - (case * 0.87), case * 4 - case // 3), warp_dir ="l", req_dir="u")
+little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case * 5 , map="lil_garden",\
+                               state = 0, warp_dest = maps.lil_house, warp_name = "lil_house",\
+                                warp_tp = (case * 8.5 - (case * 0.87), case * 8.3 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
+
 entities.append(little_garden_warp_1)
 
-little_house_warp = Entity(type = "warp", x = case * 15 + case // 2, y = case * 4 , map="lil_house", state=0, warp_dest=maps.lil_garden, warp_name="lil_garden", warp_tp=(case * 14 - (case * 0.87), case * 6 - case // 3), warp_dir="d")
-entities.append(little_house_warp)
+little_house_warp = Entity(type = "warp", x = case * 7, y = case * 8.95 , map = "lil_house",\
+                            state = 0, warp_dest = maps.lil_garden, warp_name = "lil_garden",\
+                            warp_tp=(case * 14 - (case * 0.87), case * 6 - case // 3), warp_dir = "d", hitbox_h = case, hitbox_w = case*2)
 
-# à implémenter:
-# une entité de type warp qui est invisible mais qui permet au joueur de changer de map sans dictionnaire complexe
-# warp type => 
+entities.append(little_house_warp)

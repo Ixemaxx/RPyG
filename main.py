@@ -14,9 +14,9 @@ HEIGHT = 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 try: # windows ou linux
-    font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 38)
+    font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 42)
 except:
-    font = pygame.font.Font("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 38)
+    font = pygame.font.Font("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 42)
 
 # États
 phase = "menu"
@@ -40,6 +40,19 @@ tile_size = WIDTH // 16
 # variables anim (déplacement joueur)
 dresseur_anim = [] 
 
+# vars dialogue
+
+l1 = ""
+l2 = ""
+l3 = ""
+curr_char = 0
+curr_line = 0
+IsDialogStarted = False
+dialog = ""
+max_diag_lines = 1
+max_line_chars = 1
+dialog_cooldown = 0
+dialog_speed = 0.1
 
 # Image de fond
 #bg = pygame.image.load("sprites/x.png").convert()
@@ -78,12 +91,56 @@ def pack_map():
 
     map_blit.blit(maps.map_layer,(0,0))
     map_blit.blit(entities_layer,(0,0))
-        
+
+
+def get_dialog():
+    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown
+
+    if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
+        if not IsDialogStarted:
+            IsDialogStarted = True
+            dresseur.Player.interact = None
+            curr_char = 0
+            curr_line = 0 # 0 ou 1 (ligne 1 ou 2)
+            l1, l2, l3 = "", "", ""
+
+            dialog = dresseur.Player.dialog[0] # liste avec les lignes de texte
+
+            max_diag_lines = len(dialog)
+
+            max_line_chars = len(dialog[curr_line])
+        else:
+            curr_char += 1
+            if curr_char >= max_line_chars:
+                curr_line += 1
+                if curr_line < max_diag_lines:
+                    max_line_chars = len(dialog[curr_line])
+                    curr_char = 0
+                else:
+                    dialog = "done" # état spécial pour déterminer la fin de la boucle
+                    dresseur.Player.interact = "dialog_end"
+                    IsDialogStarted = False
+            
+        if dialog != "done":        
+            if curr_line == 0:
+                l1 = f"{l1}{dialog[curr_line][curr_char]}"
+            elif curr_line == 1:
+                l2 = f"{l2}{dialog[curr_line][curr_char]}"
+            else:
+                l3 = f"{l3}{dialog[curr_line][curr_char]}"
+        else:
+            dialog = "" # reset du dialogue
+
+        dialog_cooldown = dialog_speed
+
+    
+
+
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, entities_layer
+    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, entities_layer, dialog_cooldown
 
     clock = pygame.time.Clock()
     running = True
@@ -139,10 +196,30 @@ def main():
             pass
 
         if phase == "game":
+
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
             dresseur.Player.update(keys, dt, map, current_entities)
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
             #print(map_name) # attention ce print saccage les fps de loRdi
+            if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
+
+                name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.12, HEIGHT * 0.07)
+
+                dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
+                pygame.draw.rect(screen, BLACK, name_box)
+
+                screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.7))
+                pygame.draw.rect(screen, BLACK, dialog_box)
+
+                if dialog_cooldown <= 0:
+                    get_dialog()
+                else:
+                    dialog_cooldown -= 0.1
+
+                screen.blit(font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.76))
+                screen.blit(font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.82))
+                screen.blit(font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.88))
+                
 
         elif phase == "lapemon":
             pass

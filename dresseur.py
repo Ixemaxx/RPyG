@@ -21,7 +21,6 @@ sp_tile_events = {2: ["banc",None], 3: ["banc",None]} # si l'event s'exécute sa
 
 tile_size = 1920 // 16
 
-dialog = False
 
 anims = {
             "idle_d": [0],
@@ -56,6 +55,7 @@ class Dresseur:
         self.interact = None
         self.cooldown = 0
         self.state = None
+        self.dialog = [] # liste qui contient les infos du dialogue en cours
 
         width = self.sprite_sheet.get_width()
 
@@ -155,13 +155,14 @@ class Dresseur:
 
     def get_interaction(self): # interact est une liste de type  [type,interaction] interaction contient les infos de l'interaction
 
-        type = self.interact[0] #juste le type qui détermine si c'est un item, dialogue, banc, warpzone...
+        type = self.interact[0] #juste le type qui détermine si c'est un item, dia(l)ogue, banc, warpzone...
         interact = self.interact[1]
         self.cooldown = 2.5
 
-        if self.able and not dialog:
+        if self.able and self.dialog == []:
             if type == "npc":
-                print(interact.dialog)
+                self.dialog = [interact.dialog, interact.action, interact.npc.username]
+                self.able = False
             
             elif type == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
                 self.state = "banc"
@@ -175,6 +176,9 @@ class Dresseur:
                 self.x, self.y = interact.player_pos[0], interact.player_pos[1]
                 self.dir = interact.player_dir
                 maps.change_map(map,map_name)
+        elif self.dialog != []:
+            self.able = True
+            self.dialog = []
         else:
             if self.state == "banc":
                 self.y += 30
@@ -184,7 +188,7 @@ class Dresseur:
         self.get_state()
 
     def get_state(self):
-        if not dialog:
+        if self.dialog == []:
             if self.state == "banc":
                 self.able = False
 
@@ -237,7 +241,7 @@ class Dresseur:
 
         
         if keys != 0 and self.cooldown <= 0:
-            if keys[keymap["e"]]: # à part, ça permet d'interagir avec des pnj, des boites de dialogue...
+            if keys[keymap["e"]]: # à part, ça permet d'interagir avec des pnj, des boites de dia(l)ogue...
                 if self.interact != None:
                     self.get_interaction()
 

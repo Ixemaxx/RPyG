@@ -13,10 +13,11 @@ WIDTH = 1920
 HEIGHT = 1080
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-try: # windows ou linux
-    font = pygame.font.Font("C:\Windows\Fonts\Arial.ttf", 42)
-except:
-    font = pygame.font.Font("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 42)
+
+font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
+dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
+font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 40)
+
 
 # États
 phase = "menu"
@@ -101,7 +102,7 @@ def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
             menu_color2 = WHITE # boutons et textes hors des boutons
             menu_colorh = HOVER
 
-            menu_title = font.render("Pause", True, menu_color2)
+            menu_title = font2.render("Pause", True, menu_color2)
             title_size = menu_title.get_width()
             menu_title_pos = [(menu_win.centerx - title_size / 2), HEIGHT * 0.252]
             
@@ -260,7 +261,7 @@ def main():
                 dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
                 pygame.draw.rect(screen, BLACK, name_box)
 
-                screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.7))
+                screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
                 pygame.draw.rect(screen, BLACK, dialog_box)
 
                 if dialog_cooldown <= 0:
@@ -268,15 +269,15 @@ def main():
                 else:
                     dialog_cooldown -= 0.1
 
-                screen.blit(font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.76))
-                screen.blit(font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.82))
-                screen.blit(font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.88))
+                screen.blit(dia_font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.77))
+                screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
+                screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
                 if dresseur.Player.interact == "dialog_end":
-                    screen.blit(font.render("...", True, WHITE), (WIDTH * 0.72, HEIGHT * 0.89))
+                    screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
 
             if menu != None:
                 pygame.draw.rect(screen, menu_color1, menu_win)
-                screen.blit(font.render("Menu", True, menu_color2), (menu_title_pos[0], menu_title_pos[1]))
+                screen.blit(font2.render("Menu", True, menu_color2), (menu_title_pos[0], menu_title_pos[1]))
 
                 for i, btn in enumerate(btn_list):
                     if btn[0].collidepoint(mouse_pos):

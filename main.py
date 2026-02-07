@@ -32,7 +32,6 @@ GameName = "PyKemon"
 GameVersion = 0
 TabState = "Loading"
 
-menu = None
 cooldown = 0
 map_entities = [] # une entité = un npc ou un item, représenté par sa classe Entity
 
@@ -54,6 +53,13 @@ max_line_chars = 1
 dialog_cooldown = 0
 dialog_speed = 0.1
 
+# vars menu
+
+menu = None
+menus = [None,"pause","settings","sac","pykemon","pykedex"]
+btn_names = {"resume":"REPRENDRE", "settings":"PARAMETRES", "sac": "SAC", "pykemon": "EQUIPE","pykedex":"PYKEDEX"}
+
+
 # Image de fond
 #bg = pygame.image.load("sprites/x.png").convert()
 #bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
@@ -72,15 +78,56 @@ def set_phase(new_phase):
         pass
 
 
-def set_menu(id):
-    global menu
+def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title
 
-    if id == 0: # fermeture du menu
-        menu = None
-        dresseur.dresseur.Player.able = True
+    menu = menus[id]
+
+    if menu == None: # fermeture du menu
+        dresseur.Player.able = True
     else:
-        menu = id
-        dresseur.dresseur.Player.able = False
+        dresseur.Player.able = False
+        btn_list = [] # btn = [rect, action] action est aussi le texte affiché pour l'instant
+
+        if menu == "pause":
+            width = 0.25 * WIDTH
+            height = 0.5 * HEIGHT
+            btn_w = 0.9 * width
+            btn_h = 0.15 * height
+        
+            menu_win = pygame.Rect(WIDTH / 2 - width / 2, HEIGHT * 0.25, width, height)
+
+            menu_color1 = BLACK # fenetre du fond et texte dans les boutons
+            menu_color2 = WHITE # boutons et textes hors des boutons
+            menu_colorh = HOVER
+
+            menu_title = font.render("Pause", True, menu_color2)
+            title_size = menu_title.get_width()
+            menu_title_pos = [(menu_win.centerx - title_size / 2), HEIGHT * 0.252]
+            
+            # btns
+            btn_txt_x = WIDTH / 2 - btn_w / 2
+            btn_txt_y = HEIGHT * 0.3
+            btn_txt_offest = HEIGHT * 0.09 # différence
+
+            btn_pause = pygame.Rect(btn_txt_x, btn_txt_y, btn_w, btn_h) # les 2 premiers arguments du btn haut sonts utilisés pour btn_txt_pos
+            btn_settings = pygame.Rect(btn_txt_x, btn_txt_y + btn_txt_offest, btn_w, btn_h)
+            btn_sac = pygame.Rect(btn_txt_x, btn_txt_y + 2 * btn_txt_offest, btn_w, btn_h)
+            btn_pykemon = pygame.Rect(btn_txt_x, btn_txt_y + 3 * btn_txt_offest, btn_w, btn_h)
+            btn_pykedex = pygame.Rect(btn_txt_x, btn_txt_y + 4 * btn_txt_offest, btn_w, btn_h)
+
+            txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
+            btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
+
+            # btn_list = [rect, id, texte affiché, largeur du texte]
+            btn_list=[[btn_pause, "resume"],[btn_settings, "settings"],[btn_sac, "sac"],[btn_pykemon, "pykemon"],[btn_pykedex, "pykedex"]]
+            
+            for btn in btn_list: # gestion améliorée de la liste pour mieux lire 
+                texte = font.render(btn_names[btn[1]], True, menu_color1)
+                btn.append(texte)
+                btn.append(texte.get_width())
+
+            
 
 def pack_map():
     global map_layer, entities_layer, map_blit
@@ -93,10 +140,12 @@ def pack_map():
     map_blit.blit(entities_layer,(0,0))
 
 
+# 100% par moi (petit flex donc je le précise)
 def get_dialog():
     global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown
 
     if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
+
         if not IsDialogStarted:
             IsDialogStarted = True
             dresseur.Player.interact = None
@@ -109,6 +158,7 @@ def get_dialog():
             max_diag_lines = len(dialog)
 
             max_line_chars = len(dialog[curr_line])
+        
         else:
             curr_char += 1
             if curr_char >= max_line_chars:
@@ -150,9 +200,9 @@ def main():
     dresseur.Player.y = HEIGHT // 2 - dresseur.Player.sprite.get_height() // 2
 
     dresseur.Player.extract_anim()
-    entities_layer,current_entities = draw_entities(maps.map_name)  
+    entities_layer,current_entities = draw_entities(maps.map_id)  
 
-    TabState = maps.map_name
+    TabState = maps.map_id
     pack_map()
 
     while running:
@@ -160,11 +210,11 @@ def main():
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
         if keys[pygame.K_ESCAPE] and cooldown <= 0:
-            cooldown = 3
+            cooldown = 1
             if menu == None:
                 set_menu(1)
             else:
-                set_menu(menu - 1)
+                set_menu(0)
 
         if cooldown >= 0: #cooldown utilisé pour les menus
             cooldown -= 0.1
@@ -177,9 +227,9 @@ def main():
 
         if maps.isNewMap:
             maps.isNewMap = False
-            TabState = maps.map_name
+            TabState = maps.SectionName[maps.map_id] # on utilise l'id de la map pour 
             # 1. On récupère les nouvelles entités de la nouvelle map
-            entities_layer, current_entities = draw_entities(maps.map_name)  
+            entities_layer, current_entities = draw_entities(maps.map_id)  
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
     
@@ -192,15 +242,17 @@ def main():
 
         # MENU
 
-        if phase == "menu":
+        if phase == "tilescreen":
             pass
 
         if phase == "game":
 
+            
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
-            dresseur.Player.update(keys, dt, map, current_entities)
+            if menu == None: # un chouilla d'optimisation pour loRdi
+                dresseur.Player.update(keys, dt, map, current_entities)
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
-            #print(map_name) # attention ce print saccage les fps de loRdi
+
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
 
                 name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.12, HEIGHT * 0.07)
@@ -221,9 +273,23 @@ def main():
                 screen.blit(font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.88))
                 if dresseur.Player.interact == "dialog_end":
                     screen.blit(font.render("...", True, WHITE), (WIDTH * 0.72, HEIGHT * 0.89))
+
+            if menu != None:
+                pygame.draw.rect(screen, menu_color1, menu_win)
+                screen.blit(font.render("Menu", True, menu_color2), (menu_title_pos[0], menu_title_pos[1]))
+
+                for i, btn in enumerate(btn_list):
+                    if btn[0].collidepoint(mouse_pos):
+                        color2 = menu_colorh
+                        if mouse_click:
+                            set_menu(i)
+                    else:
+                        color2 = menu_color2
+                    pygame.draw.rect(screen, color2, btn[0])
+                    screen.blit(btn[2], (btn_txt_pos[0] - btn[3] / 2, btn_txt_pos[1] + (i * btn_txt_pos[2]))) # btn_txt_pos est une liste avec [x, y, y_offset]
                 
 
-        elif phase == "lapemon":
+        elif phase == "pykedex":
             pass
 
         ## Lignes pour visualiser le centre de l'écran

@@ -176,10 +176,10 @@ class Dresseur:
             elif type == "warp": # à compléter
                 # interact[1] c'est l'entité warp, qui contient les infos nécessaires pour le changement de map
                 map = interact.warp_dest 
-                map_name = interact.warp_name
+                map_id = interact.warp_name
                 self.x, self.y = interact.player_pos[0], interact.player_pos[1]
                 self.dir = interact.player_dir
-                maps.change_map(map,map_name)
+                maps.change_map(map,map_id)
         elif self.dialog != []:
             self.able = True
             self.dialog = []

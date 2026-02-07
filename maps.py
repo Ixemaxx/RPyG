@@ -16,6 +16,8 @@ rotating_tiles = [0,1]
 rotating_surface = [] # la version surface des tiles 
 rotation = [0, 90, 180, 270] # rotation en degrés à appliquer
 
+SectionName = {"lil_garden": "Route 1", "lil_house": "Ma Maison"}
+
 def tilemap_manager():
     global tilemap, sprite_sheet
 
@@ -52,10 +54,10 @@ def draw_map():
     return map_surface
 
 def change_map(new_map,new_name):
-    global map, map_name, map_layer, isNewMap
+    global map, map_id, map_layer, isNewMap
 
     map = new_map
-    map_name = new_name
+    map_id = new_name
     map_layer = draw_map()
     isNewMap = True
 

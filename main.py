@@ -29,7 +29,7 @@ HOVER = (100, 100, 100)
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0
+GameVersion = 0.1
 TabState = "Loading"
 
 cooldown = 0

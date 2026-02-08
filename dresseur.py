@@ -23,14 +23,14 @@ tile_size = 1920 // 16
 
 
 anims = {
-            "idle_d": [0],
-            "idle_l": [8],
-            "idle_r": [12],
-            "idle_u": [4],
-            "walk_d": [1,3],
-            "walk_l": [8,9],
-            "walk_r": [12,13],
-            "walk_u": [5,7]
+            "idle_d": [3],
+            "idle_l": [6],
+            "idle_r": [9],
+            "idle_u": [0],
+            "walk_d": [4,3,5],
+            "walk_l": [7,6,8],
+            "walk_r": [10,9,11],
+            "walk_u": [1,0,2]
         }
 
 class Dresseur:
@@ -64,9 +64,9 @@ class Dresseur:
 
     def extract_anim(self):
 
-        for i in range(16):
-            rect = pygame.Rect((i % 4) * (width // 4), (i // 4) * (width // 4), width // 4, width // 4)
-            self.anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (64 * self.coeff, 80 * self.coeff)))
+        for i in range(12):
+            rect = pygame.Rect((i % 3) * (width // 3), (i // 3) * (width // 4), width // 3, width // 4)
+            self.anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (98 * self.coeff, 98 * self.coeff)))
 
 
     def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef) 
@@ -77,7 +77,7 @@ class Dresseur:
             self.curr_frame = 0
             self.anim_timer = 0
 
-        self.anim_timer += 0.07
+        self.anim_timer += 0.1
         if self.anim_timer >= 1:
             self.anim_timer = 0
             self.curr_frame += 1
@@ -92,8 +92,8 @@ class Dresseur:
     def IsFuturePosAllowed(self, dx, dy, world_map, entities): 
         global tile_size, special_tile, allowed_tile, sp_tile_events
 
-        sprite_w = 64 * self.coeff
-        sprite_h = 80 * self.coeff
+        sprite_w = 98 * self.coeff
+        sprite_h = 98 * self.coeff
 
         # On calcule la position future du "bas" du personnage (ses pieds)
 
@@ -126,7 +126,7 @@ class Dresseur:
                     direction_check = True
                 
                 if entity.type == "npc":
-                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
+                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
                         if direction_check:
                             self.interact = ["npc",entity]
                         return False
@@ -254,5 +254,5 @@ class Dresseur:
             
 
 # Création des deux personnages
-Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/11.png"), (100,100)), username="Ixemax") 
+Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/0.png"), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)

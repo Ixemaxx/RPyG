@@ -57,14 +57,14 @@ def draw_entities(map): # on obtient les entités d'une certaine map grâce à s
     return layer, current_entities
 
 little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
-                              state = 0, npc_name = "Bob", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/10.png"),\
-                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Salut ! Je suis Bob.","Bienvenue dans mon humble ","demeure !"], npc_action = 1, req_dir="u")
+                              state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png"),\
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des pokémons sauvages !"], npc_action = 1, req_dir="u")
 
 entities.append(little_garden_npc_1)
 
 little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case * 5 , map="lil_garden",\
                                state = 0, warp_dest = maps.lil_house, warp_name = "lil_house",\
-                                warp_tp = (case * 8.5 - (case * 0.87), case * 8.3 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
+                                warp_tp = (case * 8.5 - (case * 0.87), case * 8 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
 
 entities.append(little_garden_warp_1)
 

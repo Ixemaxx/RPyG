@@ -58,7 +58,7 @@ def draw_entities(map): # on obtient les entités d'une certaine map grâce à s
 
 little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
                               state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png"),\
-                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des pokémons sauvages !"], npc_action = 1, req_dir="u")
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des PyKemons sauvages !"], npc_action = 1, req_dir="u")
 
 entities.append(little_garden_npc_1)
 

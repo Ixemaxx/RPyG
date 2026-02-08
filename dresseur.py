@@ -15,7 +15,7 @@ DARK_RED = (166, 23, 23)
 keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
 speed = 300
 
-allowed_tile = [0,1,5,70,102] # id de cases où le joueur peut marcher (pas de collisions)
+allowed_tile = [0,1,5,70,102, 256, 257, 258, 259, 260, 261, 262, 263] # id de cases où le joueur peut marcher (pas de collisions)
 special_tile = [2,3] # cases spéciales (bancs, hautes herbes)
 sp_tile_events = {2: ["banc",None], 3: ["banc",None]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
@@ -43,6 +43,7 @@ class Dresseur:
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
         self.team = []
+        self.inv = {"ball0": 99, "potion": 99, "rappel": 99, "dex": 1}
         #animations
         self.anim = ""
         self.frames = 1 #nb de frames de l'anim

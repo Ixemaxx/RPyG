@@ -256,7 +256,7 @@ def main():
 
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
 
-                name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.12, HEIGHT * 0.07)
+                name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.14, HEIGHT * 0.07)
 
                 dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
                 pygame.draw.rect(screen, BLACK, name_box)

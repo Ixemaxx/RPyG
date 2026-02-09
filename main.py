@@ -69,13 +69,14 @@ dialog_speed = 0.1
 
 # vars menu
 
-menu = None
-menus = [None,"pause","settings","sac","pykemon","pykedex"]
-btn_specs = {"resume":"REPRENDRE",
+menu = "None"
+menus = ["None","pause","pykemon","sac","pykedex","settings","online","save"]
+btn_specs = {"save":"SAUVEGARDER",
             "settings":"PARAMETRES",
             "sac": "SAC",
             "pykemon": "EQUIPE",
-            "pykedex":"PYKEDEX"}
+            "pykedex":"PYKEDEX",
+            "online": "Multijoueur"}
 
 
 # Image de fond
@@ -96,12 +97,13 @@ def set_phase(new_phase):
         bg_color = RED
 
 
-def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title
+def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown
 
     menu = menus[id]
+    cooldown = 3
 
-    if menu == None: # fermeture du menu
+    if menu == "None": # fermeture du menu
         dresseur.Player.able = True
         set_phase("game")
         
@@ -118,13 +120,14 @@ def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
 
         
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
-            btn_list=[["resume"],["settings"],["sac"],["pykemon"],["pykedex"]]
-            
+            btn_list=[["pykemon"],["sac"],["pykedex"],["settings"],["online"],["save"]]
+            btn_datas = [[GREEN,DARK_GREEN], [YELLOW,DARK_YELLOW], [(255,0,0),DARK_RED], [PINK, DARK_PINK], [BLUE, DARK_BLUE], [PURPLE, DARK_PURPLE]]
 
             menu_color1 = DARK_RED # fenetre du fond et texte dans les boutons
             menu_color2 = RED # boutons et textes hors des boutons
             menu_colorh = (255,0,0)
 
+            menu_title = "Menu principal"
             menu_title_pos = [WIDTH * 0.01, HEIGHT * 0.015]
             
             # btns
@@ -132,37 +135,39 @@ def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
             btn_txt_y = HEIGHT * 0.3
             btn_txt_offest = HEIGHT * 0.09 # différence
 
-            for i in range(len(btn_list)):
+            for i in range(len(btn_list)): # liste = [id, rect, texte, width, colors]
                 if i < 3:
                     rect = pygame.Rect((WIDTH * 0.05 * (i + 1)) + (i * btn_w), (HEIGHT * 0.25), btn_w, btn_h) # ligne 1 menu
                 else:
                     rect = pygame.Rect((WIDTH * 0.05 * (i - 2)) + ((i - 3) * btn_w), (HEIGHT * 0.55), btn_w, btn_h) # ligne 2 menu
 
+                texte = font.render(btn_specs[btn_list[i][0]], True, WHITE)
+
                 btn_list[i].append(rect)
+                btn_list[i].append(texte)
+                btn_list[i].append(texte.get_width())
+                btn_list[i].append(btn_datas[i])
 
 
             txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
             btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
 
-            # btn_list = [id, rect, texte affiché, largeur du texte]
-            
-            for btn in btn_list: # gestion améliorée de la liste pour mieux lire 
-                texte = font.render(btn_specs[btn[0]], True, WHITE)
-                btn.append(texte)
-                btn.append(texte.get_width())
+        if menu == "pykemon":
+            width = WIDTH // 3
+            height = 0.3 * HEIGHT
+            btn_w = 0.8 * width
+            btn_h = 0.7 * height
 
-        elif menu == "ex-pause":
-            width = 0.25 * WIDTH
-            height = 0.5 * HEIGHT
-            btn_w = 0.9 * width
-            btn_h = 0.15 * height
         
-            menu_win = pygame.Rect(WIDTH / 2 - width / 2, HEIGHT * 0.25, width, height)
+            menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
+            btn_list = [[dresseur.Player.team[i]] for i in range(6)] # on récupère les infos de l'équipe du joueur (None par défaut)
+            btn_datas = [[GREEN,DARK_GREEN]]
 
-            menu_color1 = DARK_RED # fenetre du fond et texte dans les boutons
-            menu_color2 = RED # boutons et textes hors des boutons
-            menu_colorh = HOVER
+            menu_color1 = DARK_GREEN # fenetre du fond et texte dans les boutons
+            menu_color2 = GREEN # boutons et textes hors des boutons
+            menu_colorh = (0,255,0)
 
+            menu_title = "Gestion de l'équipe"
             menu_title_pos = [WIDTH * 0.01, HEIGHT * 0.015]
             
             # btns
@@ -170,22 +175,24 @@ def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
             btn_txt_y = HEIGHT * 0.3
             btn_txt_offest = HEIGHT * 0.09 # différence
 
-            btn_pause = pygame.Rect(btn_txt_x, btn_txt_y, btn_w, btn_h) # les 2 premiers arguments du btn haut sonts utilisés pour btn_txt_pos
-            btn_settings = pygame.Rect(btn_txt_x, btn_txt_y + btn_txt_offest, btn_w, btn_h)
-            btn_sac = pygame.Rect(btn_txt_x, btn_txt_y + 2 * btn_txt_offest, btn_w, btn_h)
-            btn_pykemon = pygame.Rect(btn_txt_x, btn_txt_y + 3 * btn_txt_offest, btn_w, btn_h)
-            btn_pykedex = pygame.Rect(btn_txt_x, btn_txt_y + 4 * btn_txt_offest, btn_w, btn_h)
+            for i in range(len(btn_list)): # liste = [id, rect, texte, width, colors]
+                if i < 3:
+                    rect = pygame.Rect((WIDTH * 0.05 * (i + 1)) + (i * btn_w), (HEIGHT * 0.25), btn_w, btn_h) # ligne 1 menu
+                else:
+                    rect = pygame.Rect((WIDTH * 0.05 * (i - 2)) + ((i - 3) * btn_w), (HEIGHT * 0.55), btn_w, btn_h) # ligne 2 menu
+
+                texte = font.render(str(btn_list[i]), True, WHITE)
+
+                btn_list[i].append(rect)
+                btn_list[i].append(texte)
+                btn_list[i].append(texte.get_width())
+                btn_list[i].append(btn_datas[0])
+
 
             txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
             btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
-
-            # btn_list = [rect, id, texte affiché, largeur du texte]
-            btn_list=[[btn_pause, "resume"],[btn_settings, "settings"],[btn_sac, "sac"],[btn_pykemon, "pykemon"],[btn_pykedex, "pykedex"]]
-            
-            for btn in btn_list: # gestion améliorée de la liste pour mieux lire 
-                texte = font.render(btn_specs[btn[1]], True, menu_color1)
-                btn.append(texte)
-                btn.append(texte.get_width())
+                
+                    
 
             
 
@@ -269,8 +276,8 @@ def main():
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
         if keys[pygame.K_x] and cooldown <= 0:
-            cooldown = 1
-            if menu == None:
+            cooldown = 0.1
+            if menu == "None":
                 set_menu(1)
             else:
                 set_menu(0)
@@ -341,27 +348,35 @@ def main():
 
 
         elif phase == "menu":
-            if menu == "pause":
-                pygame.draw.rect(screen, DARK_RED, (0, 0, WIDTH, HEIGHT * 0.1))
+            color2 = RED
+            if menu == "pause" or menu == "pykemon":
+                pygame.draw.rect(screen,menu_color1, (0, 0, WIDTH, HEIGHT * 0.1))
                 close_tab = pygame.draw.rect(screen, close_tab_color, (0, HEIGHT * 0.9, WIDTH, HEIGHT * 0.1))
                 if close_tab.collidepoint(mouse_pos):
                     close_tab_color = menu_colorh
-                    if mouse_click:
+                    if mouse_click and cooldown <= 0:
+                        cooldown = 0.1
+                        if menu == "pause":
                             set_menu(0)
+                        else:
+                            set_menu(1)
                 else:
-                    close_tab_color = DARK_RED
-                screen.blit(font2.render("Menu principal", True, menu_color2), (menu_title_pos[0], menu_title_pos[1]))
+                    close_tab_color = menu_color1
+                screen.blit(font2.render(menu_title, True, WHITE), (menu_title_pos[0], menu_title_pos[1]))
                 screen.blit(font2.render("Retour", True, WHITE), (WIDTH * 0.45, HEIGHT * 0.92))
 
                 for i, btn in enumerate(btn_list):
                     if btn[1].collidepoint(mouse_pos):
-                        color2 = menu_colorh
+                        color2 = btn[4][0]
                         if mouse_click:
-                            set_menu(i)
+                            set_menu(i + 2)
                     else:
-                        color2 = menu_color1
+                        color2 = btn[4][1]
                     pygame.draw.rect(screen, color2, btn[1]) # color2
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
+            
+            else: 
+                print("menu inconnu")
 
 
         elif phase == "pykedex":

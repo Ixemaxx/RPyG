@@ -33,9 +33,11 @@ anims = {
             "walk_u": [1,0,2]
         }
 
-class Dresseur:
+class Dresseur(pygame.sprite.Sprite):
     def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d"):
         global width
+
+        super().__init__()
 
         self.sprite_sheet = pygame.transform.scale(sprite_sheet, (100,100)) #alpha pour retirer le fond blanc
         self.sprite = sprite_sheet #provisoire, le temps d'appeler get_sprite()
@@ -89,6 +91,15 @@ class Dresseur:
         sprite = self.frames[self.curr_frame]
         self.sprite = self.anim_list[sprite]
 
+    def set_npc_dir(self,npc_dir):
+        facing = {"u": "d", "l": "r", "r": "l", "d": "u"}
+
+        if self.dir == facing[npc_dir] or npc_dir == facing[self.dir]:
+            return npc_dir
+        else:
+            return facing[self.dir]
+            
+
     # IA
     def IsFuturePosAllowed(self, dx, dy, world_map, entities): 
         global tile_size, special_tile, allowed_tile, sp_tile_events
@@ -129,7 +140,9 @@ class Dresseur:
                 if entity.type == "npc":
                     if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
                         if direction_check:
+                            entity.npc.dir = self.set_npc_dir(entity.npc.dir)
                             self.interact = ["npc",entity]
+                            entity.npc.animate_dresseur(f"idle_{entity.npc.dir}")
                         return False
     
                 elif entity.type == "warp":

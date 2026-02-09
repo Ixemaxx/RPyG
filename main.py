@@ -2,7 +2,7 @@ import pygame
 import os
 import dresseur
 import maps
-from entity import *
+import entity_manager as entity_mgr
 
 # Initialisation de Pygame
 pygame.init()
@@ -131,14 +131,14 @@ def set_menu(id): # [None,"pause","settings","sac","pykemon","pykedex"]
             
 
 def pack_map():
-    global map_layer, entities_layer, map_blit
+    global map_layer, map_blit #, entities_layer
 
     map_w = 1920
     map_h = 1080
     map_blit = pygame.Surface((map_w,map_h),pygame.SRCALPHA)
 
     map_blit.blit(maps.map_layer,(0,0))
-    map_blit.blit(entities_layer,(0,0))
+    #map_blit.blit(entities_layer,(0,0))
 
 
 # 100% par moi (petit flex donc je le précise)
@@ -183,15 +183,13 @@ def get_dialog():
             dialog = "" # reset du dialogue
 
         dialog_cooldown = dialog_speed
-
     
-
 
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, entities_layer, dialog_cooldown
+    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown
 
     clock = pygame.time.Clock()
     running = True
@@ -201,7 +199,8 @@ def main():
     dresseur.Player.y = HEIGHT // 2 - dresseur.Player.sprite.get_height() // 2
 
     dresseur.Player.extract_anim()
-    entities_layer,current_entities = draw_entities(maps.map_id)  
+    #entities_layer,current_entities = draw_entities(maps.map_id)  
+    current_entities = entity_mgr.get_curr_entities(maps.map_id)
 
     TabState = maps.map_id
     pack_map()
@@ -230,7 +229,7 @@ def main():
             maps.isNewMap = False
             TabState = maps.SectionName[maps.map_id] # on utilise l'id de la map pour 
             # 1. On récupère les nouvelles entités de la nouvelle map
-            entities_layer, current_entities = draw_entities(maps.map_id)  
+            #entities_layer, current_entities = draw_entities(maps.map_id)  
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
     
@@ -247,15 +246,16 @@ def main():
             pass
 
         if phase == "game":
-
             
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
             if menu == None: # un chouilla d'optimisation pour loRdi
-                dresseur.Player.update(keys, dt, map, current_entities)
+                dresseur.Player.update(keys, dt, map, current_entities) # avant il y'avait aussi current_entities
+                entity_mgr.all_sprites.update()
+            entity_mgr.all_sprites.draw(screen)
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
 
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
-
+                
                 name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.14, HEIGHT * 0.07)
 
                 dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
@@ -274,6 +274,7 @@ def main():
                 screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
                 if dresseur.Player.interact == "dialog_end":
                     screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
+
 
             if menu != None:
                 pygame.draw.rect(screen, menu_color1, menu_win)

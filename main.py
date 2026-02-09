@@ -29,7 +29,7 @@ RED = (243, 87, 87) # background
 DARK_RED = (179, 13, 13)
 YELLOW = (243, 181, 87) # menu sac
 DARK_YELLOW = (179, 176, 13)
-GREEN = (91, 243, 87) # menu pokemon
+GREEN = (91, 223, 87) # menu pokemon
 DARK_GREEN = (13, 179, 30)
 BLUE = (87, 181, 243) # pokédex
 DARK_BLUE = (13, 152, 179)
@@ -39,6 +39,7 @@ PINK = (243, 87, 202)
 DARK_PINK = (179, 13, 130)
 HOVER = (100, 100, 100)
 close_tab_color = DARK_RED
+menu_color2 = RED
 
 
 fps = 0
@@ -89,16 +90,17 @@ pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}
 # CHANGEMENT DE PHASE
 
 def set_phase(new_phase):
-    global phase, bg_color
+    global phase, bg_color, TabState
 
     phase = new_phase
 
     if phase == "game":
+        TabState = maps.SectionName[maps.map_id]
         bg_color = RED
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState
 
     menu = menus[id]
     cooldown = 3
@@ -108,6 +110,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
         set_phase("game")
         
     else:
+        TabState = f"Dans le menu {menu}"
         dresseur.Player.able = False
         set_phase("menu")
         btn_list = [] # btn = [rect, action] action est aussi le texte affiché pour l'instant
@@ -161,7 +164,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
         
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
             btn_list = [[dresseur.Player.team[i]] for i in range(6)] # on récupère les infos de l'équipe du joueur (None par défaut)
-            btn_datas = [[GREEN,DARK_GREEN]]
+            btn_datas = [[(0,255,0),DARK_GREEN]]
 
             menu_color1 = DARK_GREEN # fenetre du fond et texte dans les boutons
             menu_color2 = GREEN # boutons et textes hors des boutons
@@ -305,7 +308,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        screen.fill(bg_color)
+        screen.fill(menu_color2)
 
         # MENU
 

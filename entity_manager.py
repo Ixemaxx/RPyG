@@ -48,37 +48,23 @@ class Entity(pygame.sprite.Sprite):
         if self.type == "npc":
             self.image = self.npc.sprite  # Met à jour l'image pour l'animation
             self.rect.topleft = (self.x, self.y) # Met à jour la position
+        elif self.type == "warp":
+            self.hitbox.topleft = (self.x, self.y) # Met à jour la position de la hitbox
 
 
 
 
-
-def draw_entities(map): # on obtient les entités d'une certaine map grâce à self.map
-    
-    current_entities = []
-    layer = pygame.Surface((1920,1080),pygame.SRCALPHA) # on crée une surface de la taille de l'écran
-
-    for entity in entities:
-        if entity.map == map:
-            current_entities.append(entity)
-
-    for entity in current_entities:
-        if entity.type == "npc":
-            layer.blit(entity.npc.sprite, (entity.x, entity.y))
-        elif entity.type == "warp":
-            pygame.draw.rect(layer, (0,255,0,100), entity.hitbox) # on dessine la hitbox de la warp zone pour la visualiser, à retirer ensuite
-
-    return layer, current_entities
 
 def get_curr_entities(map):
-    current_entities = []
+    global all_sprites 
+
+    all_sprites = pygame.sprite.Group()
 
     for entity in entities:
         if entity.map == map:
-            current_entities.append(entity)
+            all_sprites.add(entity)
 
-
-    return current_entities
+    return all_sprites
 
 
 little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
@@ -99,6 +85,4 @@ little_house_warp = Entity(type = "warp", x = case * 7, y = case * 8.95 , map = 
 
 entities.append(little_house_warp)
 
-for entity in entities:
-    if entity.type == "npc":
-        all_sprites.add(entity)
+all_sprites = get_curr_entities(maps.map_id)

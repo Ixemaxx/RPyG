@@ -142,7 +142,6 @@ class Dresseur(pygame.sprite.Sprite):
                         if direction_check:
                             entity.npc.dir = self.set_npc_dir(entity.npc.dir)
                             self.interact = ["npc",entity]
-                            entity.npc.animate_dresseur(f"idle_{entity.npc.dir}")
                         return False
     
                 elif entity.type == "warp":
@@ -179,6 +178,7 @@ class Dresseur(pygame.sprite.Sprite):
 
         if self.able and self.dialog == []:
             if type == "npc":
+                interact.npc.animate_dresseur(f"idle_{interact.npc.dir}")
                 self.dialog = [interact.dialog, interact.action, interact.npc.username]
                 self.able = False
             

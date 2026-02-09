@@ -232,6 +232,7 @@ def main():
             #entities_layer, current_entities = draw_entities(maps.map_id)  
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
+            current_entities = entity_mgr.get_curr_entities(maps.map_id)
     
 
         for event in pygame.event.get():
@@ -251,7 +252,11 @@ def main():
             if menu == None: # un chouilla d'optimisation pour loRdi
                 dresseur.Player.update(keys, dt, map, current_entities) # avant il y'avait aussi current_entities
                 entity_mgr.all_sprites.update()
-            entity_mgr.all_sprites.draw(screen)
+                
+            try:
+                entity_mgr.all_sprites.draw(screen)
+            except:
+                pass
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
 
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours

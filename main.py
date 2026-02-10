@@ -392,7 +392,7 @@ def main():
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
 
             elif menu == "pykemon": # vue d'un seul pokémon de l'équipe
-                if sous_menu == None:
+                if sous_menu == None: # on vérifie le sous menu
                     for i, btn in enumerate(btn_list):
                         if btn[1].collidepoint(mouse_pos):
                             color2 = btn[4][0]

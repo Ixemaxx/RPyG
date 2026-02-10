@@ -1,5 +1,6 @@
 import pygame
 import maps
+import creatures as pkmns
 
 pygame.init()
 

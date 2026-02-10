@@ -7,7 +7,7 @@ moves = {"charge": ["Charge", 20, 30, 100, "normal"],
          }
 
 class Creature:
-    def __init__(self, name, hp, attack, defense, sprite, moveset, type):
+    def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map):
         self.name = name
         self.hp = hp
         self.attack = attack
@@ -15,6 +15,9 @@ class Creature:
         self.sprite = sprite
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.type = type # str du nom du type
+        self.lvl = lvl
+        self.xp = 0
+        self.req_xp = req_xp
 
     def atk(self, move, opponent):
         precision = moves[move][3]
@@ -42,4 +45,6 @@ class Creature:
     def efficacite(self, move, type):
         pass
 
+
+punkromatides = Creature("Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],None,None,None], "normal", random.randint(2, 5), 20 , "lil_garden")
 

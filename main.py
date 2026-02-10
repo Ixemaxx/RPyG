@@ -3,6 +3,7 @@ import os
 import dresseur
 import maps
 import entity_manager as entity_mgr
+import creatures as pkmns
 
 # Initialisation de Pygame
 pygame.init()
@@ -184,7 +185,11 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
                 else:
                     rect = pygame.Rect((WIDTH * 0.05 * (i - 2)) + ((i - 3) * btn_w), (HEIGHT * 0.55), btn_w, btn_h) # ligne 2 menu
 
-                texte = font.render(str(btn_list[i]), True, WHITE)
+                try:
+                    name = str(btn_list[i][0].name)
+                    texte = font.render(name, True, WHITE)
+                except:
+                    texte = font.render("Vide", True, WHITE)
 
                 btn_list[i].append(rect)
                 btn_list[i].append(texte)
@@ -273,6 +278,8 @@ def main():
 
     TabState = maps.map_id
     pack_map()
+
+    dresseur.Player.team[0] = pkmns.punkromatides # debug pour ne pas commencer à 0 pokémons
 
     while running:
         keys = pygame.key.get_pressed()

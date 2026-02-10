@@ -101,9 +101,10 @@ def set_phase(new_phase):
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu
 
     menu = menus[id]
+    sous_menu = None
     cooldown = 3
 
     if menu == "None": # fermeture du menu
@@ -263,7 +264,7 @@ def get_dialog():
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color
 
     clock = pygame.time.Clock()
     running = True
@@ -286,7 +287,7 @@ def main():
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
         if keys[pygame.K_x] and cooldown <= 0:
-            cooldown = 0.1
+            cooldown = 3
             if menu == "None":
                 set_menu(1)
             else:
@@ -359,32 +360,54 @@ def main():
 
         elif phase == "menu":
             color2 = RED
-            if menu == "pause" or menu == "pykemon":
-                pygame.draw.rect(screen,menu_color1, (0, 0, WIDTH, HEIGHT * 0.1))
-                close_tab = pygame.draw.rect(screen, close_tab_color, (0, HEIGHT * 0.9, WIDTH, HEIGHT * 0.1))
-                if close_tab.collidepoint(mouse_pos):
-                    close_tab_color = menu_colorh
-                    if mouse_click and cooldown <= 0:
-                        cooldown = 0.1
-                        if menu == "pause":
-                            set_menu(0)
-                        else:
-                            set_menu(1)
-                else:
-                    close_tab_color = menu_color1
-                screen.blit(font2.render(menu_title, True, WHITE), (menu_title_pos[0], menu_title_pos[1]))
-                screen.blit(font2.render("Retour", True, WHITE), (WIDTH * 0.45, HEIGHT * 0.92))
+
+            # bandeau du haut des menus
+            pygame.draw.rect(screen,menu_color1, (0, 0, WIDTH, HEIGHT * 0.1))
+            close_tab = pygame.draw.rect(screen, close_tab_color, (0, HEIGHT * 0.9, WIDTH, HEIGHT * 0.1))
+            if close_tab.collidepoint(mouse_pos):
+                close_tab_color = menu_colorh
+                if mouse_click and cooldown <= 0:
+                    cooldown = 0.1
+                    if menu == "pause":
+                        set_menu(0)
+                    else:
+                        set_menu(1)
+            else:
+                close_tab_color = menu_color1
+
+            # nom du menu
+            screen.blit(font2.render(menu_title, True, WHITE), (menu_title_pos[0], menu_title_pos[1]))
+            screen.blit(font2.render("Retour", True, WHITE), (WIDTH * 0.45, HEIGHT * 0.92))
+
+            if menu == "pause":
 
                 for i, btn in enumerate(btn_list):
                     if btn[1].collidepoint(mouse_pos):
                         color2 = btn[4][0]
                         if mouse_click:
-                            set_menu(i + 2)
+                            set_menu(i + 2)   
                     else:
                         color2 = btn[4][1]
                     pygame.draw.rect(screen, color2, btn[1]) # color2
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
-            
+
+            elif menu == "pykemon": # vue d'un seul pokémon de l'équipe
+                if sous_menu == None:
+                    for i, btn in enumerate(btn_list):
+                        if btn[1].collidepoint(mouse_pos):
+                            color2 = btn[4][0]
+                            if mouse_click:
+                                cooldown = 3
+                                sous_menu = i + 1 
+                                name = font.render(f"PyKemon: {btn[0].name}",  True, WHITE)
+                                types = font.render(f"Type: {btn[0].type}", True, WHITE)
+                        else:
+                            color2 = btn[4][1]
+                        pygame.draw.rect(screen, color2, btn[1]) # color2
+                        screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
+                else:
+                    screen.blit(name, (WIDTH * 0.05, HEIGHT * 0.15))
+                    screen.blit(types, (WIDTH * 0.05, HEIGHT * 0.25))
             else: 
                 print("menu inconnu")
 
@@ -403,7 +426,6 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
-
 
 
 set_phase("game")

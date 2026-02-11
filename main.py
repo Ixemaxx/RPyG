@@ -18,6 +18,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
 dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
+pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 27)
 
 
 # États
@@ -105,7 +106,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
 
     menu = menus[id]
     sous_menu = None
-    cooldown = 3
+    cooldown = 1
 
     if menu == "None": # fermeture du menu
         dresseur.Player.able = True
@@ -287,7 +288,7 @@ def main():
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
         if keys[pygame.K_x] and cooldown <= 0:
-            cooldown = 3
+            cooldown = 1
             if menu == "None":
                 set_menu(1)
             else:
@@ -367,11 +368,17 @@ def main():
             if close_tab.collidepoint(mouse_pos):
                 close_tab_color = menu_colorh
                 if mouse_click and cooldown <= 0:
-                    cooldown = 0.1
+                    cooldown = 1
                     if menu == "pause":
                         set_menu(0)
                     else:
-                        set_menu(1)
+                        if sous_menu == None:
+                            set_menu(1)
+                        else:
+                            if sous_menu > 1:
+                                sous_menu -= 1
+                            else:
+                                sous_menu = None
             else:
                 close_tab_color = menu_color1
 
@@ -392,22 +399,48 @@ def main():
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
 
             elif menu == "pykemon": # vue d'un seul pokémon de l'équipe
-                if sous_menu == None: # on vérifie le sous menu
+                if sous_menu == None: # on vérifie le sous menu => None = équiê, 1 = vue d'un pokémon
                     for i, btn in enumerate(btn_list):
                         if btn[1].collidepoint(mouse_pos):
                             color2 = btn[4][0]
-                            if mouse_click:
-                                cooldown = 3
+                            if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
+                                cooldown = 1
                                 sous_menu = i + 1 
-                                name = font.render(f"PyKemon: {btn[0].name}",  True, WHITE)
-                                types = font.render(f"Type: {btn[0].type}", True, WHITE)
+                                name = pykfont.render(f"PyKemon: {btn[0].name}",  True, WHITE)
+                                level = pykfont.render(f"Niveau: {str(btn[0].lvl)}", True, WHITE)
+                                moves = pykfont.render("Attaques:", True, WHITE)
+                                hp = pykfont.render(f"PVs: {btn[0].hp} / {btn[0].max_hp}", True, WHITE)
+                                atk = pykfont.render(f"Dégâts: {btn[0].attack}", True, WHITE)
+                                defense = pykfont.render(f"Défense: {btn[0].defense}", True, WHITE)
+                                types = pykfont.render(f"Type: {btn[0].type}", True, WHITE)
+                                sprite = btn[0].sprite[0] # sprite de face
+                                sprite = pygame.transform.scale(sprite,(sprite.get_width() * 5,sprite.get_height() * 5))
+                                view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
+                                moveset = btn[0].moveset # pour chopper les infos des attaques
+                                tab_name = font.render("Infos Pykemon", WHITE, True)
+                                
                         else:
                             color2 = btn[4][1]
                         pygame.draw.rect(screen, color2, btn[1]) # color2
                         screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
                 else:
-                    screen.blit(name, (WIDTH * 0.05, HEIGHT * 0.15))
-                    screen.blit(types, (WIDTH * 0.05, HEIGHT * 0.25))
+                    # Menu infos du pykemon
+                    pygame.draw.rect(screen, menu_color1, view_rect)
+                    screen.blit(tab_name, (WIDTH * 0.04, HEIGHT * 0.17))
+                    screen.blit(name, (WIDTH * 0.04, HEIGHT * 0.24))
+                    screen.blit(types, (WIDTH * 0.04, HEIGHT * 0.29))
+                    screen.blit(level, (WIDTH * 0.04, HEIGHT * 0.34))
+                    screen.blit(hp, (WIDTH * 0.04, HEIGHT * 0.39))
+                    screen.blit(types, (WIDTH * 0.04, HEIGHT * 0.44))
+                    screen.blit(atk, (WIDTH * 0.04, HEIGHT * 0.49))
+                    screen.blit(defense, (WIDTH * 0.04, HEIGHT * 0.54))
+                    screen.blit(moves, (WIDTH * 0.04, HEIGHT * 0.59))
+                    screen.blit(sprite, (WIDTH * 0.9 - sprite.get_width() // 2, HEIGHT * 0.1))
+                    i = 0
+                    for move in moveset: # boucle qui affiche les attaques avec leurs PPs
+                        if move != None:
+                            screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: ? / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
+                            i += 1
             else: 
                 print("menu inconnu")
 

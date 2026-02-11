@@ -3,13 +3,14 @@ import random
 
 # moves = [nom, dégats, pp, précision, type]
 moves = {"charge": ["Charge", 20, 30, 100, "normal"],
-         "dracom": ["Draco Météores", 130, 5, 90, "dragon"],
+         "dracom": ["Draco-Météores", 130, 5, 90, "dragon"],
          }
 
 class Creature:
     def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map):
         self.name = name
         self.hp = hp
+        self.max_hp = hp
         self.attack = attack
         self.defense = defense
         self.sprite = sprite
@@ -46,5 +47,5 @@ class Creature:
         pass
 
 
-punkromatides = Creature("Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],None,None,None], "normal", random.randint(2, 5), 20 , "lil_garden")
+punkromatides = Creature("Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["charge"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden")
 

@@ -20,6 +20,13 @@ class Creature:
         self.xp = 0
         self.req_xp = req_xp
 
+    def lvlup(self):
+        self.lvl += 1
+        self.xp = 0
+        self.req_xp *= 1.1
+        self.attack += 20
+        self.defense += 20
+
     def atk(self, move, opponent):
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts

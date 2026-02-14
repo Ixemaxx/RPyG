@@ -2,6 +2,8 @@ import pygame
 import os
 from dresseur import Dresseur
 import maps
+import random
+import creatures as pkmns
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -11,7 +13,8 @@ all_sprites = pygame.sprite.Group()
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, type, x, y, map, state, npc_name=None, npc_dir=None, npc_sprite=None, npc_team=None, reward=None, npc_dialog = None, 
-                 npc_action = 0, npc_hitbox=None, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None):
+                 npc_action = 0, npc_hitbox=None, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None,
+                 grass_creatures=None, grass_levels=None):
         
         super().__init__() # on initialise pygame.sprite.Sprite, pour créer un groupe de sprites
         self.x = x
@@ -40,6 +43,12 @@ class Entity(pygame.sprite.Sprite):
 
             self.dialog = npc_dialog # le dialogue
             self.action = npc_action # dialogue 0, combat 1, échange 2, cadeau 3
+
+        elif type == "grass":
+            self.w =hitbox_w
+            self.h = hitbox_h
+            self.creatures = grass_creatures
+            self.levels = grass_levels
     
         elif type == "warp":
             self.warp_dest = warp_dest
@@ -49,6 +58,15 @@ class Entity(pygame.sprite.Sprite):
             self.w = hitbox_w
             self.h = hitbox_h
             self.hitbox = pygame.Rect(self.x, self.y, self.w, self.h) # hitbox de la warp zone, à ajuster selon les besoins
+
+    def get_creature(self):
+        creature = random.choice(self.creatures)
+        creature.lvl = random.randint(self.levels[0], self.levels[1])
+        for i in range(creature.lvl - 1):
+            creature.lvlup()
+
+        return creature # renvoie une créature au hasard
+        
 
     def update(self): # mise à jour du sprite dynamiquement
         if self.type == "npc":
@@ -85,6 +103,11 @@ little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case
                                 warp_tp = (case * 8.5 - (case * 0.87), case * 8 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
 
 entities.append(little_garden_warp_1)
+
+little_garden_grass = Entity(type = "grass", x = case * 1, y = case * 6 , map="lil_garden",\
+                               state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=[pkmns.punkromatides], grass_levels=[2,4])
+
+entities.append(little_garden_grass)
 
 little_house_warp = Entity(type = "warp", x = case * 7, y = case * 8.95 , map = "lil_house",\
                             state = 0, warp_dest = maps.lil_garden, warp_name = "lil_garden",\

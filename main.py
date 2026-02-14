@@ -91,7 +91,7 @@ pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}
 
 # CHANGEMENT DE PHASE
 
-def set_phase(new_phase):
+def set_phase(new_phase, opponent=None):
     global phase, bg_color, TabState
 
     phase = new_phase
@@ -99,6 +99,10 @@ def set_phase(new_phase):
     if phase == "game":
         TabState = maps.SectionName[maps.map_id]
         bg_color = RED
+
+    elif phase == "fight":
+        dresseur.Player.encounter = opponent
+        TabState = f"Combat contre {opponent.name}"
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
@@ -331,6 +335,11 @@ def main():
             dresseur.Player.update(keys, dt, map, current_entities) # avant il y'avait aussi current_entities
             entity_mgr.all_sprites.update()
 
+            if dresseur.Player.encounter == "get":
+                for entity in entity_mgr.entities:
+                    if entity.type == "grass" and entity.map == maps.map_id:
+                        set_phase("fight", opponent=entity.get_creature())
+
             #for entity in entity_mgr.entities:
             #    try:
             #        pygame.draw.rect(screen, GREEN, entity.npc.selfbox)
@@ -454,7 +463,7 @@ def main():
                 print("menu inconnu")
 
 
-        elif phase == "pykedex":
+        elif phase == "fight":
             pass
 
         ## Lignes pour visualiser le centre de l'écran

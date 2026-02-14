@@ -17,8 +17,8 @@ keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pyg
 speed = 300
 
 allowed_tile = [0,1,5,70,102, 256, 257, 258, 259, 260, 261, 262, 263] # id de cases où le joueur peut marcher (pas de collisions)
-special_tile = [2,3] # cases spéciales (bancs, hautes herbes)
-sp_tile_events = {2: ["banc",None], 3: ["banc",None]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
+special_tile = [2,3,5,70] # cases spéciales (bancs, hautes herbes)
+sp_tile_events = {2: ["banc",None], 3: ["banc",None], 5: ["grass","now"], 70: ["grass","now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
 
@@ -62,6 +62,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.dialog = [] # liste qui contient les infos du dialogue en cours
+        self.encounter = None
         #self.hitbox_r = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
         #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
         #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
@@ -119,7 +120,7 @@ class Dresseur(pygame.sprite.Sprite):
             return facing[self.dir]
             
 
-    # IA
+    # IA en partie
     def IsFuturePosAllowed(self, dx, dy, world_map, entities): 
         global tile_size, special_tile, allowed_tile, sp_tile_events
 
@@ -166,6 +167,7 @@ class Dresseur(pygame.sprite.Sprite):
 
                         if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)): # collision avec le sprite du npc, pas juste sa hitbox d'interaction
                             return False
+                        
     
                 elif entity.type == "warp":
                     if ((feet_x2 > entity.x) and (feet_x < entity.x + entity.w)) and ((feet_y < entity.y + entity.h) and (feet_y > entity.y)) and direction_check:
@@ -181,8 +183,8 @@ class Dresseur(pygame.sprite.Sprite):
             if sp_tile != None:
                 event = sp_tile_events[sp_tile]
                 self.interact = [event[0],event[1]]
-                if len(event) == 3:
-                    if event[2] == "now":
+                if len(event) == 2:
+                    if event[1] == "now":
                         self.get_interaction()
 
             # Autorisé SEULEMENT si les DEUX pieds sont sur du sol (0 ou 1)
@@ -216,6 +218,10 @@ class Dresseur(pygame.sprite.Sprite):
                 self.x, self.y = interact.player_pos[0], interact.player_pos[1]
                 self.dir = interact.player_dir
                 maps.change_map(map,map_id)
+
+            elif type == "grass":
+                self.encounter = "get" # on attend que la boucle main lance le combat maintenant
+
         elif self.dialog != []:
             self.able = True
             self.dialog = []

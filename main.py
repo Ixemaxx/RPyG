@@ -273,6 +273,7 @@ def main():
     #on définit la position du joueur (centre) ainsi que son sprite
     dresseur.Player.x = WIDTH // 2 - dresseur.Player.sprite.get_width() // 2
     dresseur.Player.y = HEIGHT // 2 - dresseur.Player.sprite.get_height() // 2
+    dresseur.Player.selfbox = pygame.Rect(dresseur.Player.x, dresseur.Player.y, 98, 98)
 
     dresseur.Player.extract_anim()
     #entities_layer,current_entities = draw_entities(maps.map_id)  
@@ -336,6 +337,11 @@ def main():
                 pass
                 
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
+
+
+            #dresseur.Player.selfbox = pygame.Rect(dresseur.Player.x, dresseur.Player.y, 98, 98)
+            pygame.draw.rect(screen, RED, dresseur.Player.hitbox)
+            pygame.draw.rect(screen, GREEN, dresseur.Player.selfbox)
 
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
                 

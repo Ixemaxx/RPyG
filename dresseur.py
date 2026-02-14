@@ -35,7 +35,7 @@ anims = {
         }
 
 class Dresseur(pygame.sprite.Sprite):
-    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d"):
+    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d", x=0, y=0):
         global width
 
         super().__init__()
@@ -59,7 +59,16 @@ class Dresseur(pygame.sprite.Sprite):
         self.interact = None
         self.cooldown = 0
         self.state = None
+        self.x = x
+        self.y = y
         self.dialog = [] # liste qui contient les infos du dialogue en cours
+        #self.hitbox_r = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
+        #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
+        #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
+        #self.hitbox_d = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
+        self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50) # hitbox des interactions, pas du joueur
+        self.selfbox = pygame.Rect(self.x + 22, self.y + 22, 98, 98) # hitbox d'un dresseur npc, non dynamique
+
 
         width = self.sprite_sheet.get_width()
 
@@ -106,7 +115,7 @@ class Dresseur(pygame.sprite.Sprite):
         global tile_size, special_tile, allowed_tile, sp_tile_events
 
         sprite_w = 98 * self.coeff
-        sprite_h = 98 * self.coeff
+        sprite_h = 90 * self.coeff
 
         # On calcule la position future du "bas" du personnage (ses pieds)
 
@@ -139,10 +148,13 @@ class Dresseur(pygame.sprite.Sprite):
                     direction_check = True
                 
                 if entity.type == "npc":
-                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
-                        if direction_check:
+                    self.selfbox = entity.npc.selfbox
+                    if self.hitbox.colliderect(entity.npc.selfbox):
+                        if direction_check: # permet d'interragir avec les npcs sans leur rentrer dedans
                             entity.npc.dir = self.set_npc_dir(entity.npc.dir)
                             self.interact = ["npc",entity]
+
+                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
                         return False
     
                 elif entity.type == "warp":
@@ -187,6 +199,7 @@ class Dresseur(pygame.sprite.Sprite):
                 self.state = "banc"
                 self.y -= 20
                 self.dir = "d"
+                self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
                 
             elif type == "warp": # à compléter
                 # interact[1] c'est l'entité warp, qui contient les infos nécessaires pour le changement de map
@@ -225,15 +238,23 @@ class Dresseur(pygame.sprite.Sprite):
                 if keys[keymap["left"]]:
                     dx -= speed * dt
                     self.dir = "l"
+                    self.hitbox = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
+
+
                 if keys[keymap["right"]]:
                     dx += speed * dt
                     self.dir = 'r'
+                    self.hitbox = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
+
                 if keys[keymap["up"]]:
                     dy -= speed * dt
                     self.dir = 'u'
+                    self.hitbox = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
+
                 if keys[keymap["down"]]:
                     dy += speed * dt
                     self.dir = 'd'
+                    self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
 
 
         if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
@@ -244,8 +265,12 @@ class Dresseur(pygame.sprite.Sprite):
                     self.y += dy * 2/3
                 if dy >0:
                     self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
+                    self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
+
                 else:
                     self.dir = 'u'
+                    self.hitbox = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
+                    
             else:
                 if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
                     self.x += dx

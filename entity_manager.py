@@ -24,7 +24,7 @@ class Entity(pygame.sprite.Sprite):
         
 
         if type == "npc":
-            self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir)
+            self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir, x=self.x, y=self.y)
             self.npc.extract_anim() 
             self.npc.update(keys=0, dt=0, map=None, entities=None)
 

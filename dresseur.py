@@ -35,7 +35,7 @@ anims = {
         }
 
 class Dresseur(pygame.sprite.Sprite):
-    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d", x=0, y=0):
+    def __init__(self, sprite_sheet, username = "Red", team = None, inv = None,dir="d", x=0, y=0, selfbox=None):
         global width
 
         super().__init__()
@@ -66,8 +66,12 @@ class Dresseur(pygame.sprite.Sprite):
         #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
         #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
         #self.hitbox_d = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
-        self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50) # hitbox des interactions, pas du joueur
-        self.selfbox = pygame.Rect(self.x + 22, self.y + 22, 98, 98) # hitbox d'un dresseur npc, non dynamique
+        if selfbox == None:
+            self.updatebox = True
+            self.selfbox = pygame.Rect(self.x + 44, self.y + 44, 98, 98) # hitbox d'un dresseur npc, non dynamique
+        else:
+            self.updatebox = False
+            self.selfbox = selfbox
 
 
         width = self.sprite_sheet.get_width()
@@ -80,6 +84,11 @@ class Dresseur(pygame.sprite.Sprite):
         for i in range(12):
             rect = pygame.Rect((i % 3) * (width // 3), (i // 3) * (width // 4), width // 3, width // 4)
             self.anim_list.append(pygame.transform.scale(self.sprite_sheet.subsurface(rect), (98 * self.coeff, 98 * self.coeff)))
+
+    def update_selfbox(self):
+        w = self.sprite.get_width()
+        h = self.sprite.get_height()
+        self.selfbox = pygame.Rect(self.x, self.y, w, h + 10) # hitbox d'un dresseur npc, non dynamique
 
 
     def animate_dresseur(self, id): # pour un dresseur (anim_list) pour éviter le transform.scale à chaque frame (des fps benef) 
@@ -135,6 +144,7 @@ class Dresseur(pygame.sprite.Sprite):
             tile_right = world_map[row][col2]
 
             sp_tile = None # pas de case spéciale déclarée au début
+            self.interact = None
 
             # Pas IA, dans le bloc IA
             for entity in entities: # vérif si il y'a une entité sur le chemin
@@ -148,21 +158,20 @@ class Dresseur(pygame.sprite.Sprite):
                     direction_check = True
                 
                 if entity.type == "npc":
-                    self.selfbox = entity.npc.selfbox
-                    if self.hitbox.colliderect(entity.npc.selfbox):
+                    if self.selfbox.colliderect(entity.npc.selfbox):
+                        #print("collide",direction_check, self.interact)
                         if direction_check: # permet d'interragir avec les npcs sans leur rentrer dedans
                             entity.npc.dir = self.set_npc_dir(entity.npc.dir)
                             self.interact = ["npc",entity]
 
-                    if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)):
-                        return False
+                        if ((feet_x > entity.x - 30) and (feet_x < entity.x + sprite_w - 20)) and ((feet_y < entity.y + sprite_h + 23) and (feet_y > entity.y + 10)): # collision avec le sprite du npc, pas juste sa hitbox d'interaction
+                            return False
     
                 elif entity.type == "warp":
                     if ((feet_x2 > entity.x) and (feet_x < entity.x + entity.w)) and ((feet_y < entity.y + entity.h) and (feet_y > entity.y)) and direction_check:
                         self.interact = ["warp",entity,"now"]
                         self.get_interaction()
                 
-            self.interact = None
                 
             # vérifie si on est sur une case spéciale
             for tile in special_tile:
@@ -199,7 +208,6 @@ class Dresseur(pygame.sprite.Sprite):
                 self.state = "banc"
                 self.y -= 20
                 self.dir = "d"
-                self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
                 
             elif type == "warp": # à compléter
                 # interact[1] c'est l'entité warp, qui contient les infos nécessaires pour le changement de map
@@ -238,41 +246,38 @@ class Dresseur(pygame.sprite.Sprite):
                 if keys[keymap["left"]]:
                     dx -= speed * dt
                     self.dir = "l"
-                    self.hitbox = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
-
 
                 if keys[keymap["right"]]:
                     dx += speed * dt
                     self.dir = 'r'
-                    self.hitbox = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
 
                 if keys[keymap["up"]]:
                     dy -= speed * dt
                     self.dir = 'u'
-                    self.hitbox = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
 
                 if keys[keymap["down"]]:
                     dy += speed * dt
                     self.dir = 'd'
-                    self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
 
 
         if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
             self.moving = True
             if dx != 0 and dy != 0: #si on se déplace en diagonale, on réduit la vitesse pour éviter d'aller plus vite
                 if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
+                    if self.updatebox:
+                        self.update_selfbox()
                     self.x += dx * 2/3
                     self.y += dy * 2/3
                 if dy >0:
                     self.dir = 'd' # dire que si on bouge gauche/droite + haut/bas c'est l'anim haut/bas qui se joue
-                    self.hitbox = pygame.Rect(self.x + 49, self.y + 98, 10, 50)
 
                 else:
                     self.dir = 'u'
-                    self.hitbox = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
                     
             else:
                 if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
+                    if self.updatebox:
+                        self.update_selfbox()
                     self.x += dx
                     self.y += dy
 

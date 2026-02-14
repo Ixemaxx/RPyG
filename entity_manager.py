@@ -11,7 +11,7 @@ all_sprites = pygame.sprite.Group()
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, type, x, y, map, state, npc_name=None, npc_dir=None, npc_sprite=None, npc_team=None, reward=None, npc_dialog = None, 
-                 npc_action = 0, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None):
+                 npc_action = 0, npc_hitbox=None, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None):
         
         super().__init__() # on initialise pygame.sprite.Sprite, pour créer un groupe de sprites
         self.x = x
@@ -24,9 +24,15 @@ class Entity(pygame.sprite.Sprite):
         
 
         if type == "npc":
-            self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir, x=self.x, y=self.y)
+            if npc_hitbox != None:
+                hitbox = pygame.Rect(self.x + npc_hitbox[0], self.y - npc_hitbox[1], npc_hitbox[2], npc_hitbox[3])
+            else:
+                hitbox = None
+
+            self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir, x=self.x, y=self.y, selfbox=hitbox)
             self.npc.extract_anim() 
             self.npc.update(keys=0, dt=0, map=None, entities=None)
+            self.npc.update_selfbox()
 
             # pour le spritegroup
             self.image = self.npc.sprite
@@ -69,7 +75,8 @@ def get_curr_entities(map):
 
 little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
                               state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png"),\
-                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des PyKemons sauvages !"], npc_action = 1)
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des PyKemons sauvages !"], npc_action = None)
+                                #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
 entities.append(little_garden_npc_1)
 

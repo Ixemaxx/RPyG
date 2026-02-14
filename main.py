@@ -330,6 +330,13 @@ def main():
             screen.blit(map_blit,(0, 0)) # map_blit est la surface qui regroupe la tile_map et les entités (évite de faire 2 blits successifs)
             dresseur.Player.update(keys, dt, map, current_entities) # avant il y'avait aussi current_entities
             entity_mgr.all_sprites.update()
+
+            #for entity in entity_mgr.entities:
+            #    try:
+            #        pygame.draw.rect(screen, GREEN, entity.npc.selfbox)
+            #    except:
+            #        pass
+            #pygame.draw.rect(screen, RED, dresseur.Player.selfbox)
                 
             try: # seuls les sprites avec une image adaptée peuvent être affichés
                 entity_mgr.all_sprites.draw(screen)
@@ -337,11 +344,7 @@ def main():
                 pass
                 
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
-
-
-            #dresseur.Player.selfbox = pygame.Rect(dresseur.Player.x, dresseur.Player.y, 98, 98)
-            pygame.draw.rect(screen, RED, dresseur.Player.hitbox)
-            pygame.draw.rect(screen, GREEN, dresseur.Player.selfbox)
+            
 
             if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
                 

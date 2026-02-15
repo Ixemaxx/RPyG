@@ -13,12 +13,14 @@ class Creature:
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
-        self.sprite = sprite
+        self.sprite = sprite # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.type = type # str du nom du type
         self.lvl = lvl
         self.xp = 0
         self.req_xp = req_xp
+        for i in range(len(self.sprite)):
+            self.sprite[i] = pygame.transform.scale(self.sprite[i],(self.sprite[i].get_width() * 5, self.sprite[i].get_height() * 5))
 
     def lvlup(self):
         self.lvl += 1
@@ -26,6 +28,7 @@ class Creature:
         self.req_xp *= 1.1
         self.attack += 20
         self.defense += 20
+
 
     def atk(self, move, opponent):
         precision = moves[move][3]

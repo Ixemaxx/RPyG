@@ -93,7 +93,7 @@ maplist.append(lil_house)
 
 tile_size = 1920 // 16 # 16 = len(world_map[0])
 tilemap_manager() #pour créer la liste qui découpe la tilemap en petites sections
-change_map(lil_house,"lil_house")
+change_map(lil_garden,"lil_garden")
 
 #notes pour les maps:
 # 2 et 3 = banc

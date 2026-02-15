@@ -77,9 +77,6 @@ class Dresseur(pygame.sprite.Sprite):
 
         width = self.sprite_sheet.get_width()
 
-        for i in range(6):
-            self.team.append(None)
-
     def extract_anim(self):
 
         for i in range(12):

@@ -70,6 +70,8 @@ max_line_chars = 1
 dialog_cooldown = 0
 dialog_speed = 0.1
 
+GlobalDialog = [] # variable de dialogue non reliée au joueur, en combat par exemple
+
 # vars menu
 
 menu = "None"
@@ -80,6 +82,19 @@ btn_specs = {"save":"SAUVEGARDER",
             "pykemon": "EQUIPE",
             "pykedex":"PYKEDEX",
             "online": "Multijoueur"}
+
+# vars combat
+
+fight_bg = pygame.image.load("sprites/battle/battle_intro.png")
+fight_intro = []
+intro = True
+for i in range(8): # animation de lancement de combat
+    surface = pygame.Rect(0,i * 1272 / 8,159,1272 / 8)
+    portion = pygame.transform.scale(fight_bg.subsurface(surface), (WIDTH,HEIGHT))
+    fight_intro.append(portion)
+
+fight_bg = fight_intro[0]
+frame = 0
 
 
 # Image de fond
@@ -92,7 +107,7 @@ pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}
 # CHANGEMENT DE PHASE
 
 def set_phase(new_phase, opponent=None):
-    global phase, bg_color, TabState
+    global phase, bg_color, TabState, intro, frame, IntroDone
 
     phase = new_phase
 
@@ -101,8 +116,23 @@ def set_phase(new_phase, opponent=None):
         bg_color = RED
 
     elif phase == "fight":
+        IntroDone = False
+        intro = True
+        frame = 0
         dresseur.Player.encounter = opponent
-        TabState = f"Combat contre {opponent.name}"
+        TabState = f"Combat contre..."
+
+def get_intro_anim(id):
+    global frame, intro, fight_bg, cooldown
+
+    fight_bg = fight_intro[id]
+    frame = id + 1
+    cooldown = 0.6
+    if frame > len(fight_intro) - 1:
+        intro = False
+        frame = 0
+        fight_bg = pygame.transform.scale(pygame.image.load("sprites/battle/Forest.png"),(WIDTH,HEIGHT))
+
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
@@ -221,20 +251,24 @@ def pack_map():
     #map_blit.blit(entities_layer,(0,0))
 
 
-# 100% par moi (petit flex donc je le précise)
+# 100% par moi sans aucun tuto (petit flex donc je le précise)
 def get_dialog():
-    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown
+    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone
 
     if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
 
         if not IsDialogStarted:
             IsDialogStarted = True
-            dresseur.Player.interact = None
+            if GlobalDialog == []: # si c'est un dialogue du joueur (pas en combat, par ex)
+                dresseur.Player.interact = None
             curr_char = 0
             curr_line = 0 # 0 ou 1 (ligne 1 ou 2)
             l1, l2, l3 = "", "", ""
 
-            dialog = dresseur.Player.dialog[0] # liste avec les lignes de texte
+            if GlobalDialog == []:
+                dialog = dresseur.Player.dialog[0] # liste avec les lignes de texte
+            else:
+                dialog = GlobalDialog
 
             max_diag_lines = len(dialog)
 
@@ -249,7 +283,9 @@ def get_dialog():
                     curr_char = 0
                 else:
                     dialog = "done" # état spécial pour déterminer la fin de la boucle
-                    dresseur.Player.interact = "dialog_end"
+                    if GlobalDialog == []:
+                        dresseur.Player.interact = "dialog_end"
+                        
                     IsDialogStarted = False
             
         if dialog != "done":        
@@ -261,15 +297,22 @@ def get_dialog():
                 l3 = f"{l3}{dialog[curr_line][curr_char]}"
         else:
             dialog = "" # reset du dialogue
+            if GlobalDialog != []:
+                GlobalDialog = []
+                IntroDone = True
+            
 
-        dialog_cooldown = dialog_speed
+        if GlobalDialog == []:
+            dialog_cooldown = dialog_speed
+        else:
+            dialog_cooldown = dialog_speed * 1.2
     
 
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone
 
     clock = pygame.time.Clock()
     running = True
@@ -354,27 +397,6 @@ def main():
                 
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
             
-
-            if dresseur.Player.dialog != []: # si il y'a un dialogue en cours
-                
-                name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.14, HEIGHT * 0.07)
-
-                dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
-                pygame.draw.rect(screen, BLACK, name_box)
-
-                screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
-                pygame.draw.rect(screen, BLACK, dialog_box)
-
-                if dialog_cooldown <= 0:
-                    get_dialog()
-                else:
-                    dialog_cooldown -= 0.1
-
-                screen.blit(dia_font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.77))
-                screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
-                screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
-                if dresseur.Player.interact == "dialog_end":
-                    screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
 
 
         elif phase == "menu":
@@ -464,12 +486,52 @@ def main():
 
 
         elif phase == "fight":
-            pass
+            if intro and cooldown <= 0:
+                get_intro_anim(frame)
+            elif not intro and not IntroDone:
+                TabState = f"Combat contre {dresseur.Player.encounter.name}"
+                GlobalDialog = [f"Un {dresseur.Player.encounter.name}","sauvage apparait !"]
+
+            screen.blit(fight_bg)
+
+            if not intro: # intro désigne l'animation d'intro du combat
+                screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
+                screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
+                if IntroDone: # intro Done c'est quand le texte d'intro est terminé
+                    pass
+
 
         ## Lignes pour visualiser le centre de l'écran
         #pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))
         #pygame.draw.rect(screen, RED, pygame.Rect(0,HEIGHT/2,WIDTH,1))
 
+        if dresseur.Player.dialog != [] or GlobalDialog != []: # si il y'a un dialogue en cours
+                
+                if GlobalDialog == []:
+                    name_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.69, WIDTH * 0.14, HEIGHT * 0.07)
+
+                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
+                    pygame.draw.rect(screen, BLACK, name_box)
+
+                    screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
+                    pygame.draw.rect(screen, BLACK, dialog_box)
+                else:
+                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
+                    pygame.draw.rect(screen, BLACK, dialog_box)
+
+
+
+                if dialog_cooldown <= 0:
+                    get_dialog()
+                else:
+                    dialog_cooldown -= 0.1
+
+                screen.blit(dia_font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.77))
+                screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
+                screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
+                if GlobalDialog == []:
+                    if dresseur.Player.interact == "dialog_end":
+                        screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
 
         fps = int(clock.get_fps())
         pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')

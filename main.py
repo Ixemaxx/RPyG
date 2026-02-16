@@ -96,6 +96,14 @@ for i in range(8): # animation de lancement de combat
 fight_bg = fight_intro[0]
 frame = 0
 
+# images combat
+
+pbar = pygame.image.load("sprites/battle/hp_player.png")
+advbar = pygame.image.load("sprites/battle/hp_adv.png")
+pbar = pygame.transform.scale(pbar, (pbar.get_width() * 4, pbar.get_height() * 4))
+advbar = pygame.transform.scale(advbar, (advbar.get_width() * 4, advbar.get_height() * 4))
+
+
 
 # Image de fond
 #bg = pygame.image.load("sprites/x.png").convert()
@@ -492,13 +500,14 @@ def main():
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
                 GlobalDialog = [f"Un {dresseur.Player.encounter.name}","sauvage apparait !"]
 
-            screen.blit(fight_bg)
+            screen.blit(fight_bg,(0,0))
 
             if not intro: # intro désigne l'animation d'intro du combat
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
-                    pass
+                    screen.blit(pbar, (0, HEIGHT * 0.45))
+                    screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
 
         ## Lignes pour visualiser le centre de l'écran

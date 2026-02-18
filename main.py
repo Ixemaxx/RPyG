@@ -508,6 +508,8 @@ def main():
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
                     screen.blit(pbar, (0, HEIGHT * 0.45))
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
+                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 223, HEIGHT * 0.057, (dresseur.Player.encounter.hp // dresseur.Player.encounter.max_hp) * 195, 10)) # cadre de la barre de vie de l'adversaire
+                    pygame.draw.rect(screen, GREEN, (0 + 175, HEIGHT * 0.482, (dresseur.Player.team[0].hp // dresseur.Player.team[0].max_hp) * 195, 10))
 
 
         ## Lignes pour visualiser le centre de l'écran

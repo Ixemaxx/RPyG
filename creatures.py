@@ -9,7 +9,7 @@ moves = {"charge": ["Charge", 20, 30, 100, "normal"],
 class Creature:
     def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map):
         self.name = name
-        self.hp = hp
+        self.hp = hp # pour ajouter un peu de variété dans les stats des créatures 
         self.max_hp = hp
         self.attack = attack
         self.defense = defense

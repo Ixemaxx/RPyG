@@ -508,6 +508,8 @@ def main():
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
                     screen.blit(pbar, (0, HEIGHT * 0.45))
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
+                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192, 8)) # barre de vie adversaire
+                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.05 + 80, HEIGHT * 0.5 - 18, 192, 8)) # barre de vie joueur
 
 
         ## Lignes pour visualiser le centre de l'écran

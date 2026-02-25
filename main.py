@@ -20,7 +20,6 @@ dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
 pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 27)
 
-
 # États
 phase = "menu"
 
@@ -42,6 +41,13 @@ DARK_PINK = (179, 13, 130)
 HOVER = (100, 100, 100)
 close_tab_color = DARK_RED
 menu_color2 = RED
+
+# vars fight
+temp_width = WIDTH / 4 - WIDTH * 0.05
+fight_ui = [[BLUE, (WIDTH * 0.05, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Fuir", True, WHITE)],
+            [GREEN, (WIDTH * 0.05 + temp_width + 50, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
+            [YELLOW, (WIDTH * 0.05 + 2 * temp_width + 100, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
+            [RED, (WIDTH * 0.05 + 3 * temp_width + 150, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
 
 
 fps = 0
@@ -506,10 +512,16 @@ def main():
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
+                    # barres d'hp
                     screen.blit(pbar, (0, HEIGHT * 0.45))
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
-                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192, 8)) # barre de vie adversaire
-                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.05 + 80, HEIGHT * 0.5 - 18, 192, 8)) # barre de vie joueur
+                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.05 + 80, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+
+                    # boutons de jeu
+                    for element in fight_ui:
+                        rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
+                        screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
 
 
         ## Lignes pour visualiser le centre de l'écran

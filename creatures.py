@@ -25,6 +25,8 @@ class Creature:
     def lvlup(self):
         self.lvl += 1
         self.xp = 0
+        self.max_hp += 20
+        self.hp += 20
         self.req_xp *= 1.1
         self.attack += 20
         self.defense += 20

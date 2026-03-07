@@ -1,6 +1,7 @@
 import pygame
 import maps
 import creatures as pkmns
+import random
 
 pygame.init()
 
@@ -217,7 +218,8 @@ class Dresseur(pygame.sprite.Sprite):
                 maps.change_map(map,map_id)
 
             elif type == "grass":
-                self.encounter = "get" # on attend que la boucle main lance le combat maintenant
+                if random.randint(1, 1000) > 990:
+                    self.encounter = "get" # on attend que la boucle main lance le combat maintenant
 
         elif self.dialog != []:
             self.able = True

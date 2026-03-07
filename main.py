@@ -4,6 +4,7 @@ import dresseur
 import maps
 import entity_manager as entity_mgr
 import creatures as pkmns
+import random
 
 # Initialisation de Pygame
 pygame.init()
@@ -48,6 +49,7 @@ fight_ui = [[BLUE, (WIDTH * 0.05, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font
             [GREEN, (WIDTH * 0.05 + temp_width + 50, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
             [YELLOW, (WIDTH * 0.05 + 2 * temp_width + 100, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
             [RED, (WIDTH * 0.05 + 3 * temp_width + 150, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
+fuite = False
 
 
 fps = 0
@@ -319,14 +321,29 @@ def get_dialog():
         if GlobalDialog == []:
             dialog_cooldown = dialog_speed
         else:
-            dialog_cooldown = dialog_speed * 1.2
+            dialog_cooldown = dialog_speed * 1.3
     
+def fight_tab(tab):
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3 # blue=fuir, green=pkms, yellow=sac, red=atk
+
+    if tab == BLUE: # fuite
+        if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
+            GlobalDialog = ["Vous prenez la fuite !"]
+            fuite = True
+        else:
+            GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
+    elif tab == RED:
+        rect = pygame.Rect(WIDTH * 0.2, HEIGHT * 0.4, WIDTH * 0.6, HEIGHT * 0.4)
+        fight_menu = [rect,dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]]
+
+
+
 
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite
 
     clock = pygame.time.Clock()
     running = True
@@ -508,6 +525,10 @@ def main():
 
             screen.blit(fight_bg,(0,0))
 
+            if fuite and GlobalDialog == []:
+                fuite = False
+                set_phase("game")
+
             if not intro: # intro désigne l'animation d'intro du combat
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
@@ -522,6 +543,9 @@ def main():
                     for element in fight_ui:
                         rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
                         screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
+                        if rect.collidepoint(mouse_pos) and mouse_click:
+                            fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
+                            
 
 
         ## Lignes pour visualiser le centre de l'écran
@@ -555,6 +579,9 @@ def main():
                 if GlobalDialog == []:
                     if dresseur.Player.interact == "dialog_end":
                         screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
+            
+
+
 
         fps = int(clock.get_fps())
         pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')

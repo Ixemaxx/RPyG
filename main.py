@@ -333,8 +333,12 @@ def fight_tab(tab):
         else:
             GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
     elif tab == RED:
-        rect = pygame.Rect(WIDTH * 0.2, HEIGHT * 0.4, WIDTH * 0.6, HEIGHT * 0.4)
-        fight_menu = [rect,dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]]
+        rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
+        fight_menu = {"rect": rect,
+                      "btns": [dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]],
+                      "title": font.render("Attaques", True, WHITE),
+                      "color": RED,
+                      "type": "fight"}
 
 
 
@@ -412,6 +416,7 @@ def main():
             if dresseur.Player.encounter == "get":
                 for entity in entity_mgr.entities:
                     if entity.type == "grass" and entity.map == maps.map_id:
+                        fight_tab(RED)
                         set_phase("fight", opponent=entity.get_creature())
 
             #for entity in entity_mgr.entities:
@@ -545,6 +550,15 @@ def main():
                         screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
                         if rect.collidepoint(mouse_pos) and mouse_click:
                             fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
+
+                    
+                    pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
+                    screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
+                    for i in range(len(fight_menu["btns"])):
+                        y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
+                        x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
+                        pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+
                             
 
 

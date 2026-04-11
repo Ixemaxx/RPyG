@@ -50,6 +50,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.inv = {"ball0": 99, "potion": 99, "rappel": 99, "dex": 1}
         #animations
         self.anim = ""
+        self.curr_creature = None #creature actuelle en combat
         self.frames = 1 #nb de frames de l'anim
         self.curr_frame = 0 
         self.dir = dir #direction du sprite

@@ -19,7 +19,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
 dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
-pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 27)
+pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
 
 # États
 phase = "menu"
@@ -44,11 +44,12 @@ close_tab_color = DARK_RED
 menu_color2 = RED
 
 # vars fight
-temp_width = WIDTH / 4 - WIDTH * 0.05
-fight_ui = [[BLUE, (WIDTH * 0.05, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Fuir", True, WHITE)],
-            [GREEN, (WIDTH * 0.05 + temp_width + 50, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
-            [YELLOW, (WIDTH * 0.05 + 2 * temp_width + 100, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
-            [RED, (WIDTH * 0.05 + 3 * temp_width + 150, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
+temp_width = WIDTH / 4
+
+fight_ui = [[BLUE, (0, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Fuir", True, WHITE)],
+            [GREEN, (temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
+            [YELLOW, (2 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
+            [RED, (3 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
 fuite = False
 
 
@@ -324,7 +325,7 @@ def get_dialog():
             dialog_cooldown = dialog_speed * 1.3
     
 def fight_tab(tab):
-    global fight_menu, GlobalDialog, fuite, l1, l2, l3 # blue=fuir, green=pkms, yellow=sac, red=atk
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color # blue=fuir, green=pkms, yellow=sac, red=atk
 
     if tab == BLUE: # fuite
         if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
@@ -338,7 +339,16 @@ def fight_tab(tab):
                       "btns": [dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]],
                       "title": font.render("Attaques", True, WHITE),
                       "color": RED,
+                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[0][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[1][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[2][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[3][0], True, WHITE)],
+                      #DMG, PP, Precision, type
+                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[0]} / {dresseur.Player.team[0].moveset[0][2]} PP", True, WHITE),
+                                   pykfont.render(f" {dresseur.Player.team[0].pps[1]} / {dresseur.Player.team[0].moveset[1][2]} PP", True, WHITE),
+                                 pykfont.render(f" {dresseur.Player.team[0].pps[2]} / {dresseur.Player.team[0].moveset[2][2]} PP", True, WHITE),
+                                  pykfont.render(f" {dresseur.Player.team[0].pps[3]} / {dresseur.Player.team[0].moveset[3][2]} PP", True, WHITE)], 
                       "type": "fight"}
+        
+
+        fight_color = fight_menu["color"]
 
 
 
@@ -347,7 +357,7 @@ def fight_tab(tab):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color
 
     clock = pygame.time.Clock()
     running = True
@@ -551,13 +561,18 @@ def main():
                         if rect.collidepoint(mouse_pos) and mouse_click:
                             fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
 
-                    
+                    # menu d'attaques, sac etc.
                     pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
                     screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
                     for i in range(len(fight_menu["btns"])):
-                        y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
-                        x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
-                        pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+                        if fight_color == RED: #Attaques
+                            y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
+                            x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
+                            pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+                            screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                            screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+
+        
 
                             
 

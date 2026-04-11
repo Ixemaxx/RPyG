@@ -15,6 +15,9 @@ class Creature:
         self.defense = defense
         self.sprite = sprite # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
+        self.pps = []
+        for move in self.moveset:
+            self.pps.append(move[2])
         self.type = type # str du nom du type
         self.lvl = lvl
         self.xp = 0

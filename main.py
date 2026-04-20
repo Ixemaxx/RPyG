@@ -104,6 +104,7 @@ for i in range(8): # animation de lancement de combat
 
 fight_bg = fight_intro[0]
 frame = 0
+action = False
 
 # images combat
 
@@ -153,7 +154,7 @@ def get_intro_anim(id):
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu, action
 
     menu = menus[id]
     sous_menu = None
@@ -544,7 +545,7 @@ def main():
                 fuite = False
                 set_phase("game")
 
-            if not intro: # intro désigne l'animation d'intro du combat
+            if not intro and not action: # intro désigne l'animation d'intro du combat
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
@@ -568,9 +569,11 @@ def main():
                         if fight_color == RED: #Attaques
                             y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
                             x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
-                            pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+                            btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
                             screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
                             screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+                            if btn.collidepoint(mouse_pos) and mouse_click:
+                                dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[i][5], dresseur.Player.encounter)
 
         
 

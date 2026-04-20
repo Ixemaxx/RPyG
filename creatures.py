@@ -2,8 +2,8 @@ import pygame
 import random
 
 # moves = [nom, dégats, pp, précision, type]
-moves = {"charge": ["Charge", 20, 30, 100, "normal"],
-         "dracom": ["Draco-Météores", 130, 5, 90, "dragon"],
+moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge"],
+         "dracom": ["Draco-Météores", 130, 5, 90, "dragon", "dracom"],
          }
 
 class Creature:
@@ -39,27 +39,30 @@ class Creature:
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
 
-        if efficacite > 1:
-            msg = ["C'est super efficace !"]
-        elif efficacite < 0:
-            msg = ["Ce n'est pas très efficace..."]
+        if efficacite == None:
+            return [f"{moves[move][0]} n'affecte pas le {opponent.name} adverse"]
         else:
-            msg = ["C'est efficace"]
+            if efficacite > 1:
+                msg = ["C'est super efficace !"]
+            elif efficacite == 0.5:
+                msg = ["Ce n'est pas très efficace..."]
+            else:
+                msg = ["C'est efficace"]
 
-        if efficacite != None: # si l'attaque affecte l'adversaire
             if precision > random.randint(0,100): # attaque réussie
-                opponent.hp -= move[1] * efficacite
+                opponent.hp -= (moves[move][1] * efficacite)
                 if opponent.hp > 0:
                     return msg
                 else:
                     return [msg, f"Le {opponent.name} est K.O !"] # la liste permet d'afficher les infos sur 2 lignes différentes dans la boite de texte
             else: # attaque esquivée
                 pass
-        else:
-            return [f"{moves[move][0]} n'affecte pas le {opponent.name} adverse"]
+            
 
-    def efficacite(self, move, type):
-        pass
+    def efficacite(self, move, type): # l'efficacité est aléatoire pour la démo, ça rajoute du peps on va dire
+        value = random.choice([None, 0.5, 1, 1.5])
+        return value
+
 
 
 punkromatides = Creature("Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["charge"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden")

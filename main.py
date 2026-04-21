@@ -4,6 +4,7 @@ import dresseur
 import maps
 import entity_manager as entity_mgr
 import creatures as pkmns
+import random
 
 # Initialisation de Pygame
 pygame.init()
@@ -16,9 +17,13 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
-dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
+dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 20)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
-pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 27)
+pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
+font3 = pygame.font.Font("fonts/dogicapixelbold.otf", 21)
+
+# musiques
+wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
 
 
 # États
@@ -43,10 +48,21 @@ HOVER = (100, 100, 100)
 close_tab_color = DARK_RED
 menu_color2 = RED
 
+# vars fight
+temp_width = WIDTH / 4
+
+fight_ui = [[BLUE, (0, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Fuir", True, WHITE)],
+            [GREEN, (temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
+            [YELLOW, (2 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
+            [RED, (3 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
+fuite = False
+
+
+
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.1
+GameVersion = 0.2
 TabState = "Loading"
 
 cooldown = 0
@@ -69,6 +85,7 @@ max_diag_lines = 1
 max_line_chars = 1
 dialog_cooldown = 0
 dialog_speed = 0.1
+end_cooldown = 1
 
 GlobalDialog = [] # variable de dialogue non reliée au joueur, en combat par exemple
 
@@ -95,6 +112,7 @@ for i in range(8): # animation de lancement de combat
 
 fight_bg = fight_intro[0]
 frame = 0
+action = False
 
 # images combat
 
@@ -102,6 +120,10 @@ pbar = pygame.image.load("sprites/battle/hp_player.png")
 advbar = pygame.image.load("sprites/battle/hp_adv.png")
 pbar = pygame.transform.scale(pbar, (pbar.get_width() * 4, pbar.get_height() * 4))
 advbar = pygame.transform.scale(advbar, (advbar.get_width() * 4, advbar.get_height() * 4))
+hp_p = pykfont.render("-- / -- PV", True, WHITE)
+hp_adv = pykfont.render("-- / -- PV", True, WHITE)
+p_color = GREEN
+adv_color = GREEN
 
 
 
@@ -122,6 +144,7 @@ def set_phase(new_phase, opponent=None):
     if phase == "game":
         TabState = maps.SectionName[maps.map_id]
         bg_color = RED
+        # le son est appelé à certains set_phase("game"), donc pas ici
 
     elif phase == "fight":
         IntroDone = False
@@ -129,6 +152,13 @@ def set_phase(new_phase, opponent=None):
         frame = 0
         dresseur.Player.encounter = opponent
         TabState = f"Combat contre..."
+        pygame.mixer.music.stop()
+        wild_snd.play()
+        pygame.mixer.music.load("sounds/encounter.mp3")  # Charger la musique
+
+
+
+        
 
 def get_intro_anim(id):
     global frame, intro, fight_bg, cooldown
@@ -144,7 +174,7 @@ def get_intro_anim(id):
 
 
 def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu, action, hp_p, hp_adv
 
     menu = menus[id]
     sous_menu = None
@@ -261,7 +291,7 @@ def pack_map():
 
 # 100% par moi sans aucun tuto (petit flex donc je le précise)
 def get_dialog():
-    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone
+    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone, end_cooldown
 
     if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
 
@@ -293,8 +323,7 @@ def get_dialog():
                     dialog = "done" # état spécial pour déterminer la fin de la boucle
                     if GlobalDialog == []:
                         dresseur.Player.interact = "dialog_end"
-                        
-                    IsDialogStarted = False
+                        IsDialogStarted = False
             
         if dialog != "done":        
             if curr_line == 0:
@@ -306,21 +335,81 @@ def get_dialog():
         else:
             dialog = "" # reset du dialogue
             if GlobalDialog != []:
-                GlobalDialog = []
-                IntroDone = True
+                if end_cooldown <= 0:
+                    GlobalDialog = []
+                    IntroDone = True
+                    IsDialogStarted = False
+                    end_cooldown = 1
+                else:
+                    end_cooldown -= 0.05
             
 
         if GlobalDialog == []:
             dialog_cooldown = dialog_speed
         else:
-            dialog_cooldown = dialog_speed * 1.2
+            dialog_cooldown = dialog_speed * 0.5
     
+def fight_tab(tab):
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, hp_p, hp_adv, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2 # blue=fuir, green=pkms, yellow=sac, red=atk
+
+    p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
+    adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
+
+    if p_ratio > 0.5:
+        p_color = GREEN
+    elif p_ratio > 0.15:
+        p_color = YELLOW
+    else:
+        p_color = (255,0,0)
+
+    if adv_ratio > 0.5:
+        adv_color = GREEN
+    elif adv_ratio > 0.15:
+        adv_color = YELLOW
+    else:
+        adv_color = (255,0,0)
+
+    hp_p = font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE)
+    hp_adv = font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE)
+
+    name_p = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
+    name_p2 = font3.render(f"{dresseur.Player.team[0].name}", True, BLACK)
+    name_adv = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
+
+    lvl_p = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
+    lvl_adv = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
+
+    if tab == BLUE: # fuite
+        if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
+            GlobalDialog = ["Vous prenez la fuite !"]
+            fuite = True
+        else:
+            GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
+    elif tab == RED:
+        rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
+        fight_menu = {"rect": rect,
+                      "btns": [dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]],
+                      "title": font.render("Attaques", True, WHITE),
+                      "color": RED,
+                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[0][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[1][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[2][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[3][0], True, WHITE)],
+                      #DMG, PP, Precision, type
+                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[0]} / {dresseur.Player.team[0].moveset[0][2]} PP", True, WHITE),
+                                   pykfont.render(f" {dresseur.Player.team[0].pps[1]} / {dresseur.Player.team[0].moveset[1][2]} PP", True, WHITE),
+                                 pykfont.render(f" {dresseur.Player.team[0].pps[2]} / {dresseur.Player.team[0].moveset[2][2]} PP", True, WHITE),
+                                  pykfont.render(f" {dresseur.Player.team[0].pps[3]} / {dresseur.Player.team[0].moveset[3][2]} PP", True, WHITE)], 
+                      "type": "fight"}
+        
+
+        fight_color = fight_menu["color"]
+
+
+
 
 
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2
 
     clock = pygame.time.Clock()
     running = True
@@ -337,7 +426,7 @@ def main():
     TabState = maps.map_id
     pack_map()
 
-    dresseur.Player.team[0] = pkmns.punkromatides # debug pour ne pas commencer à 0 pokémons
+    dresseur.Player.team[0] = pkmns.copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
 
     while running:
         keys = pygame.key.get_pressed()
@@ -367,6 +456,7 @@ def main():
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
             current_entities = entity_mgr.get_curr_entities(maps.map_id)
+
     
 
         for event in pygame.event.get():
@@ -390,6 +480,7 @@ def main():
                 for entity in entity_mgr.entities:
                     if entity.type == "grass" and entity.map == maps.map_id:
                         set_phase("fight", opponent=entity.get_creature())
+                        fight_tab(RED)
 
             #for entity in entity_mgr.entities:
             #    try:
@@ -498,18 +589,111 @@ def main():
                 get_intro_anim(frame)
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
-                GlobalDialog = [f"Un {dresseur.Player.encounter.name}","sauvage apparait !"]
+                GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
+                pygame.mixer.music.play(loops=-1, start=0.0)
 
             screen.blit(fight_bg,(0,0))
 
-            if not intro: # intro désigne l'animation d'intro du combat
+
+            if fuite and GlobalDialog == []:
+                fuite = False
+                pygame.mixer.stop()
+                pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
+                pygame.mixer.music.play(loops=-1, start=0.0)
+                set_phase("game")
+
+            if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
+
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
+
+                    if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []: #si pykemons ko
+                        GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
+                        fuite = True
+
+                    if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
+                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
+                        GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
+                        dresseur.Player.team[0].xp += exp
+                        while dresseur.Player.team[0].xp > dresseur.Player.team[0].req_xp:
+                            dresseur.Player.team[0].lvlup()
+
+                        fuite = True
+                        action = False
+
+                    # barres d'hp
                     screen.blit(pbar, (0, HEIGHT * 0.45))
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
-                    pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 223, HEIGHT * 0.057, (dresseur.Player.encounter.hp // dresseur.Player.encounter.max_hp) * 195, 10)) # cadre de la barre de vie de l'adversaire
-                    pygame.draw.rect(screen, GREEN, (0 + 175, HEIGHT * 0.482, (dresseur.Player.team[0].hp // dresseur.Player.team[0].max_hp) * 195, 10))
+                    pygame.draw.rect(screen, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+                    pygame.draw.rect(screen, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+                    screen.blit(hp_p, (20, HEIGHT * 0.505))
+                    screen.blit(hp_adv, (WIDTH * 0.87, HEIGHT * 0.08))
+
+                    screen.blit(name_p2, (20, HEIGHT * 0.45))
+                    screen.blit(name_p, (21, HEIGHT * 0.453))
+                    screen.blit(name_adv, (WIDTH * 0.77, HEIGHT * 0.025))
+
+
+                    if not action and not fuite: # on cache l'interface
+                        # boutons de jeu
+                        for element in fight_ui:
+                            rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
+                            screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
+                            if rect.collidepoint(mouse_pos) and mouse_click:
+                                fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
+
+                        # menu d'attaques, sac etc.
+                        pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
+                        screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
+
+                        for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
+                            if fight_color == RED: #Attaques
+                                y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
+                                x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
+                                btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+                                screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                                screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action:
+                                    action = True
+                                    indice = i
+                                    checkup = {"p_atk": False, "adv_atk": False, "p_pp": False}
+
+                    elif action == True: # si action == True
+                        # le checkup permet de se situer dans la boucle
+                        if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
+                            
+
+                            if checkup["p_atk"] == False:
+                                dresseur.Player.team[0].pps[indice] -= 1
+                                GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                checkup["p_atk"] = True
+                                fight_tab(RED) # on actualise les pv etc.
+
+                            elif checkup["adv_atk"] == False and GlobalDialog == []:
+                                GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
+                                checkup["adv_atk"] = True
+                                fight_tab(RED) # on actualise les pv etc.
+        
+                            # cas d'arrêt du tour
+                            if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
+                                action = False
+
+                        else:
+                            # cas d'arrêt du tour si plus de pp
+                            if checkup["p_pp"] == False:
+                                GlobalDialog = ["Plus de PP pour cette capacité"]
+                                checkup["p_pp"] = True
+                                
+                            if GlobalDialog == []:
+                                action = False
+                            
+
+
+        
+
+                            
 
 
         ## Lignes pour visualiser le centre de l'écran
@@ -527,7 +711,7 @@ def main():
                     screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
                     pygame.draw.rect(screen, BLACK, dialog_box)
                 else:
-                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
+                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.48, HEIGHT * 0.20)
                     pygame.draw.rect(screen, BLACK, dialog_box)
 
 
@@ -540,9 +724,12 @@ def main():
                 screen.blit(dia_font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.77))
                 screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
                 screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
-                if GlobalDialog == []:
+                if GlobalDialog == [] :
                     if dresseur.Player.interact == "dialog_end":
                         screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
+            
+
+
 
         fps = int(clock.get_fps())
         pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
@@ -551,7 +738,8 @@ def main():
 
     pygame.quit()
 
-
+pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
+pygame.mixer.music.play(loops=-1, start=0.0)
 set_phase("game")
 
 if __name__ == "__main__":

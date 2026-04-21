@@ -60,7 +60,7 @@ class Entity(pygame.sprite.Sprite):
             self.hitbox = pygame.Rect(self.x, self.y, self.w, self.h) # hitbox de la warp zone, à ajuster selon les besoins
 
     def get_creature(self):
-        creature = random.choice(self.creatures)
+        creature = pkmns.copy(random.choice(self.creatures))
         creature.lvl = random.randint(self.levels[0], self.levels[1])
         for i in range(creature.lvl - 1):
             creature.lvlup()
@@ -105,7 +105,7 @@ little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case
 entities.append(little_garden_warp_1)
 
 little_garden_grass = Entity(type = "grass", x = case * 1, y = case * 6 , map="lil_garden",\
-                               state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=[pkmns.punkromatides], grass_levels=[2,4])
+                               state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=["punkromatides"], grass_levels=[2,4])
 
 entities.append(little_garden_grass)
 

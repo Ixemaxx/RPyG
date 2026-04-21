@@ -541,14 +541,21 @@ def main():
 
             screen.blit(fight_bg,(0,0))
 
+
             if fuite and GlobalDialog == []:
                 fuite = False
                 set_phase("game")
 
-            if not intro: # intro désigne l'animation d'intro du combat
+            if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
+
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
+
+                    if dresseur.Player.team[0].hp <= 0 and not fuite: #si pykemons ko
+                        GlobalDialog = ["Vous n'avez plus de PyKemon", "en état de se battre. ", "Vous prenez la fuite !"]
+                        fuite = True
+
                     # barres d'hp
                     screen.blit(pbar, (0, HEIGHT * 0.45))
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
@@ -576,7 +583,33 @@ def main():
                                 screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
                                 if btn.collidepoint(mouse_pos) and mouse_click and not action:
                                     action = True
-                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[i][5], dresseur.Player.encounter)
+                                    indice = i
+                                    checkup = {"p_atk": False, "adv_atk": False, "p_pp": False}
+                    else: # si action == True
+                        # le checkup permet de se situer dans la boucle
+                        if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
+
+                            if checkup["p_atk"] == False:
+                                dresseur.Player.team[0].pps[indice] -= 1
+                                GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter)
+                                checkup["p_atk"] = True
+
+                            elif checkup["adv_atk"] == False and GlobalDialog == []:
+                                GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0])
+                                checkup["adv_atk"] = True
+        
+                            # cas d'arrêt du tour
+                            if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
+                                action = False
+                        else:
+                            # cas d'arrêt du tour si plus de pp
+                            if checkup["p_pp"] == False:
+                                GlobalDialog = ["Plus de PP pour cette capacité"]
+                                checkup["p_pp"] = True
+                            if GlobalDialog == []:
+                                action = False
+                            
+
 
         
 

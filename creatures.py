@@ -3,7 +3,7 @@ import random
 
 # moves = [nom, dégats, pp, précision, type]
 moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge"],
-         "dracom": ["Draco-Météores", 130, 5, 90, "dragon", "dracom"],
+         "dracom": ["Draco-Météores", 70, 5, 90, "dragon", "dracom"],
          }
 
 class Creature:

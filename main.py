@@ -58,7 +58,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.1
+GameVersion = 0.2
 TabState = "Loading"
 
 cooldown = 0

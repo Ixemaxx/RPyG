@@ -13,7 +13,7 @@ class Creature:
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
-        self.sprite = sprite # sprite est une liste [texture de face et de dos]
+        self.sprite = [s.copy() for s in sprite] # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.pps = []
         for move in self.moveset:
@@ -56,7 +56,7 @@ class Creature:
                 else:
                     return [msg, f"Le {opponent.name} est K.O !"] # la liste permet d'afficher les infos sur 2 lignes différentes dans la boite de texte
             else: # attaque esquivée
-                pass
+                return f"Le {opponent.name} a esquivé l'attaque !"
             
 
     def efficacite(self, move, type): # l'efficacité est aléatoire pour la démo, ça rajoute du peps on va dire
@@ -64,6 +64,12 @@ class Creature:
         return value
 
 
+def copy(creature_name):
+    if creature_name in bookmark:
+        params = bookmark[creature_name]
+        # On déballe la liste avec *params
+        return Creature(*params)
+    return None
 
-punkromatides = Creature("Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["charge"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden")
+bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["charge"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
 

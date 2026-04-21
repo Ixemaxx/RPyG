@@ -358,7 +358,7 @@ def fight_tab(tab):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action
 
     clock = pygame.time.Clock()
     running = True
@@ -375,7 +375,7 @@ def main():
     TabState = maps.map_id
     pack_map()
 
-    dresseur.Player.team[0] = pkmns.punkromatides # debug pour ne pas commencer à 0 pokémons
+    dresseur.Player.team[0] = pkmns.copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
 
     while running:
         keys = pygame.key.get_pressed()
@@ -545,7 +545,7 @@ def main():
                 fuite = False
                 set_phase("game")
 
-            if not intro and not action: # intro désigne l'animation d'intro du combat
+            if not intro: # intro désigne l'animation d'intro du combat
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
@@ -555,25 +555,28 @@ def main():
                     pygame.draw.rect(screen, GREEN, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
                     pygame.draw.rect(screen, GREEN, (WIDTH * 0.05 + 80, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
 
-                    # boutons de jeu
-                    for element in fight_ui:
-                        rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
-                        screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
-                        if rect.collidepoint(mouse_pos) and mouse_click:
-                            fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
 
-                    # menu d'attaques, sac etc.
-                    pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
-                    screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
-                    for i in range(len(fight_menu["btns"])):
-                        if fight_color == RED: #Attaques
-                            y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
-                            x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
-                            btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
-                            screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
-                            screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
-                            if btn.collidepoint(mouse_pos) and mouse_click:
-                                dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[i][5], dresseur.Player.encounter)
+                    if not action: # on cache l'interface
+                        # boutons de jeu
+                        for element in fight_ui:
+                            rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
+                            screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
+                            if rect.collidepoint(mouse_pos) and mouse_click:
+                                fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
+
+                        # menu d'attaques, sac etc.
+                        pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
+                        screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
+                        for i in range(len(fight_menu["btns"])):
+                            if fight_color == RED: #Attaques
+                                y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
+                                x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
+                                btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
+                                screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                                screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action:
+                                    action = True
+                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[i][5], dresseur.Player.encounter)
 
         
 

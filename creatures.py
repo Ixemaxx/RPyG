@@ -4,6 +4,7 @@ import random
 # moves = [nom, dégats, pp, précision, type]
 moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge"],
          "dracom": ["Draco-Météores", 70, 5, 90, "dragon", "dracom"],
+         "trempette": ["Trempette", 0, 40, 0, "eau", "trempette"]
          }
 
 class Creature:
@@ -46,11 +47,12 @@ class Creature:
             lanceur = f"Le {opponent.name} adverse utilise {moves[move][0]} !"
             cible = f"votre {self.name}."
 
-        if efficacite == None:
-            return [f"{moves[move][0]} n'affecte pas", cible]
-            
-        else:
+        if moves[move][0] == "Trempette": #trempette bypass l'efficacité et la précision
+                return [lanceur, "Cela n'a aucun effet."]
 
+        if efficacite == None:
+            return [lanceur, "Cela n'affecte pas", cible]      
+        else:
             if efficacite > 1:
                 msg = [lanceur, "C'est super efficace sur", cible]
             elif efficacite == 0.5:
@@ -62,7 +64,7 @@ class Creature:
                 opponent.hp -= (moves[move][1] * efficacite)
                 return msg
             else: # attaque esquivée
-                return f"{cible} a esquivé l'attaque !"
+                return [f"{cible} a esquivé l'attaque !"]
             
 
     def efficacite(self, move, type): # l'efficacité est aléatoire pour la démo, ça rajoute du peps on va dire
@@ -77,5 +79,5 @@ def copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["charge"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
+bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
 

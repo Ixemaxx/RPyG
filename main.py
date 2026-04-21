@@ -557,7 +557,7 @@ def main():
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
-                    if dresseur.Player.team[0].hp <= 0 and not fuite: #si pykemons ko
+                    if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []: #si pykemons ko
                         GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
                         fuite = True
 
@@ -651,7 +651,7 @@ def main():
                     screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
                     pygame.draw.rect(screen, BLACK, dialog_box)
                 else:
-                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
+                    dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.48, HEIGHT * 0.20)
                     pygame.draw.rect(screen, BLACK, dialog_box)
 
 

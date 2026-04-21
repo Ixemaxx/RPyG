@@ -1,10 +1,18 @@
 import pygame
 import random
 
+pygame.mixer.init()
+
+# sounds
+atk_snd = pygame.mixer.Sound("sounds/atk.mp3")
+atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
+heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
+
 # moves = [nom, dégats, pp, précision, type]
-moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge"],
-         "dracom": ["Draco-Météores", 70, 5, 90, "dragon", "dracom"],
-         "trempette": ["Trempette", 0, 40, 0, "eau", "trempette"]
+moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge", "atk"],
+         "dracom": ["Draco-Météores", 70, 5, 90, "dragon", "dracom", "atk2"],
+         "trempette": ["Trempette", 0, 40, 0, "eau", "trempette", None],
+         "soin": ["Soin", 0, 5, 100, "normal", "soin", "heal"]
          }
 
 class Creature:
@@ -35,11 +43,18 @@ class Creature:
         self.attack += 20
         self.defense += 20
 
+    def get_sound(self, snd):
+        if snd == "atk":
+            return atk_snd
+        if snd == "atk2":
+            return atk2_snd
+        if snd == "heal":
+            return heal_snd
+
 
     def atk(self, move, opponent, origin):
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
-        print(efficacite, move, opponent.type, moves[move][4])
 
         if origin == "player":
                 lanceur = f"{self.name} utilise {moves[move][0]} !"
@@ -49,7 +64,12 @@ class Creature:
             cible = f"votre {self.name}."
 
         if moves[move][0] == "Trempette": #trempette bypass l'efficacité et la précision
-                return [lanceur, "Cela n'a aucun effet."]
+            return [lanceur, "Cela n'a aucun effet."]
+        
+        if moves[move][0] == "Soin": # soin bypass aussi le reste
+            self.hp += int(abs((self.max_hp // 2) * random.choice([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])))
+            heal_snd.play()
+            return [lanceur, "Il regagne des PV."]
 
         if efficacite == 0:
             return [lanceur, "Cela n'affecte pas", cible]      
@@ -65,6 +85,8 @@ class Creature:
                 opponent.hp -= int(abs(moves[move][1] * efficacite))
                 if opponent.hp < 0: 
                     opponent.hp = 0
+                
+                self.get_sound(moves[move][6]).play()
                 return msg
             else: # attaque esquivée
                 return [lanceur, cible, "a esquivé l'Attaque !"]
@@ -86,7 +108,7 @@ def copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
+bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
 
 types = {
     "normal": {"roche": 0.5, "spectre": 0, "acier": 0.5},

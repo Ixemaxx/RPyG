@@ -20,7 +20,11 @@ font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
 dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 20)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
 pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
-font3 = pygame.font.Font("fonts/dogicapixelbold.otf", 22)
+font3 = pygame.font.Font("fonts/dogicapixelbold.otf", 21)
+
+# musiques
+wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
+
 
 # États
 phase = "menu"
@@ -140,6 +144,7 @@ def set_phase(new_phase, opponent=None):
     if phase == "game":
         TabState = maps.SectionName[maps.map_id]
         bg_color = RED
+        # le son est appelé à certains set_phase("game"), donc pas ici
 
     elif phase == "fight":
         IntroDone = False
@@ -147,6 +152,13 @@ def set_phase(new_phase, opponent=None):
         frame = 0
         dresseur.Player.encounter = opponent
         TabState = f"Combat contre..."
+        pygame.mixer.music.stop()
+        wild_snd.play()
+        pygame.mixer.music.load("sounds/encounter.mp3")  # Charger la musique
+
+
+
+        
 
 def get_intro_anim(id):
     global frame, intro, fight_bg, cooldown
@@ -338,7 +350,7 @@ def get_dialog():
             dialog_cooldown = dialog_speed * 0.5
     
 def fight_tab(tab):
-    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, hp_p, hp_adv, p_color, adv_color # blue=fuir, green=pkms, yellow=sac, red=atk
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, hp_p, hp_adv, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2 # blue=fuir, green=pkms, yellow=sac, red=atk
 
     p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
     adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
@@ -359,6 +371,13 @@ def fight_tab(tab):
 
     hp_p = font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE)
     hp_adv = font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE)
+
+    name_p = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
+    name_p2 = font3.render(f"{dresseur.Player.team[0].name}", True, BLACK)
+    name_adv = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
+
+    lvl_p = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
+    lvl_adv = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
 
     if tab == BLUE: # fuite
         if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
@@ -390,7 +409,7 @@ def fight_tab(tab):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, p_color, adv_color
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2
 
     clock = pygame.time.Clock()
     running = True
@@ -437,6 +456,7 @@ def main():
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
             current_entities = entity_mgr.get_curr_entities(maps.map_id)
+
     
 
         for event in pygame.event.get():
@@ -570,12 +590,16 @@ def main():
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
                 GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
+                pygame.mixer.music.play(loops=-1, start=0.0)
 
             screen.blit(fight_bg,(0,0))
 
 
             if fuite and GlobalDialog == []:
                 fuite = False
+                pygame.mixer.stop()
+                pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
+                pygame.mixer.music.play(loops=-1, start=0.0)
                 set_phase("game")
 
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
@@ -603,8 +627,12 @@ def main():
                     screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
                     pygame.draw.rect(screen, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
                     pygame.draw.rect(screen, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
-                    screen.blit(hp_p, (160, HEIGHT * 0.51))
-                    screen.blit(hp_adv, (WIDTH * 0.89, HEIGHT * 0.08))
+                    screen.blit(hp_p, (20, HEIGHT * 0.505))
+                    screen.blit(hp_adv, (WIDTH * 0.87, HEIGHT * 0.08))
+
+                    screen.blit(name_p2, (20, HEIGHT * 0.45))
+                    screen.blit(name_p, (21, HEIGHT * 0.453))
+                    screen.blit(name_adv, (WIDTH * 0.77, HEIGHT * 0.025))
 
 
                     if not action and not fuite: # on cache l'interface
@@ -632,7 +660,7 @@ def main():
                                     indice = i
                                     checkup = {"p_atk": False, "adv_atk": False, "p_pp": False}
 
-                    else: # si action == True
+                    elif action == True: # si action == True
                         # le checkup permet de se situer dans la boucle
                         if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
                             
@@ -710,7 +738,8 @@ def main():
 
     pygame.quit()
 
-
+pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
+pygame.mixer.music.play(loops=-1, start=0.0)
 set_phase("game")
 
 if __name__ == "__main__":

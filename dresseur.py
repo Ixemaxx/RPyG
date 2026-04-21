@@ -4,6 +4,7 @@ import creatures as pkmns
 import random
 
 pygame.init()
+pygame.mixer.init()
 
 # Couleurs
 WHITE = (255, 255, 255)
@@ -22,6 +23,9 @@ special_tile = [2,3,5,70] # cases spéciales (bancs, hautes herbes)
 sp_tile_events = {2: ["banc",None], 3: ["banc",None], 5: ["grass","now"], 70: ["grass","now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
+
+# sounds
+grass_snd = pygame.mixer.Sound("sounds/grass.mp3")
 
 
 anims = {
@@ -65,6 +69,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.y = y
         self.dialog = [] # liste qui contient les infos du dialogue en cours
         self.encounter = None
+        self.snd_cooldown = 1
         #self.hitbox_r = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
         #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
         #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
@@ -219,6 +224,12 @@ class Dresseur(pygame.sprite.Sprite):
                 maps.change_map(map,map_id)
 
             elif type == "grass":
+                if self.snd_cooldown <= 0:
+                    grass_snd.play()
+                    self.snd_cooldown = 1
+                else:
+                    self.snd_cooldown -= 0.06
+
                 if random.randint(1, 1000) > 990:
                     self.encounter = "get" # on attend que la boucle main lance le combat maintenant
 

@@ -17,7 +17,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 
 font = pygame.font.Font("fonts/dogicapixelbold.otf", 40)
-dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 30)
+dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 20)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
 pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
 
@@ -78,6 +78,7 @@ max_diag_lines = 1
 max_line_chars = 1
 dialog_cooldown = 0
 dialog_speed = 0.1
+end_cooldown = 1
 
 GlobalDialog = [] # variable de dialogue non reliée au joueur, en combat par exemple
 
@@ -271,7 +272,7 @@ def pack_map():
 
 # 100% par moi sans aucun tuto (petit flex donc je le précise)
 def get_dialog():
-    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone
+    global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone, end_cooldown
 
     if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
 
@@ -303,8 +304,7 @@ def get_dialog():
                     dialog = "done" # état spécial pour déterminer la fin de la boucle
                     if GlobalDialog == []:
                         dresseur.Player.interact = "dialog_end"
-                        
-                    IsDialogStarted = False
+                        IsDialogStarted = False
             
         if dialog != "done":        
             if curr_line == 0:
@@ -316,14 +316,19 @@ def get_dialog():
         else:
             dialog = "" # reset du dialogue
             if GlobalDialog != []:
-                GlobalDialog = []
-                IntroDone = True
+                if end_cooldown <= 0:
+                    GlobalDialog = []
+                    IntroDone = True
+                    IsDialogStarted = False
+                    end_cooldown = 1
+                else:
+                    end_cooldown -= 0.05
             
 
         if GlobalDialog == []:
             dialog_cooldown = dialog_speed
         else:
-            dialog_cooldown = dialog_speed * 1.3
+            dialog_cooldown = dialog_speed * 0.5
     
 def fight_tab(tab):
     global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color # blue=fuir, green=pkms, yellow=sac, red=atk
@@ -537,7 +542,7 @@ def main():
                 get_intro_anim(frame)
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
-                GlobalDialog = [f"Un {dresseur.Player.encounter.name}","sauvage apparait !"]
+                GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
 
             screen.blit(fight_bg,(0,0))
 
@@ -553,7 +558,16 @@ def main():
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
                     if dresseur.Player.team[0].hp <= 0 and not fuite: #si pykemons ko
-                        GlobalDialog = ["Vous n'avez plus de PyKemon", "en état de se battre. ", "Vous prenez la fuite !"]
+                        GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
+                        fuite = True
+
+                    if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
+                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
+                        GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
+                        dresseur.Player.team[0].lvl += exp
+                        while dresseur.Player.team[0].lvl > dresseur.Player.team[0].req_xp:
+                            dresseur.Player.team[0].lvlup()
+
                         fuite = True
 
                     # barres d'hp
@@ -574,6 +588,7 @@ def main():
                         # menu d'attaques, sac etc.
                         pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
                         screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
+
                         for i in range(len(fight_menu["btns"])):
                             if fight_color == RED: #Attaques
                                 y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
@@ -581,31 +596,36 @@ def main():
                                 btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
                                 screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
                                 screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+
                                 if btn.collidepoint(mouse_pos) and mouse_click and not action:
                                     action = True
                                     indice = i
                                     checkup = {"p_atk": False, "adv_atk": False, "p_pp": False}
+
                     else: # si action == True
                         # le checkup permet de se situer dans la boucle
                         if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
 
                             if checkup["p_atk"] == False:
                                 dresseur.Player.team[0].pps[indice] -= 1
-                                GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter)
+                                GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                fight_tab(RED) # on actualise les pps du pokemon
                                 checkup["p_atk"] = True
 
                             elif checkup["adv_atk"] == False and GlobalDialog == []:
-                                GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0])
+                                GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
                                 checkup["adv_atk"] = True
         
                             # cas d'arrêt du tour
                             if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
                                 action = False
+
                         else:
                             # cas d'arrêt du tour si plus de pp
                             if checkup["p_pp"] == False:
                                 GlobalDialog = ["Plus de PP pour cette capacité"]
                                 checkup["p_pp"] = True
+                                
                             if GlobalDialog == []:
                                 action = False
                             
@@ -644,7 +664,7 @@ def main():
                 screen.blit(dia_font.render(l1, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.77))
                 screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
                 screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
-                if GlobalDialog == []:
+                if GlobalDialog == [] :
                     if dresseur.Player.interact == "dialog_end":
                         screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
             

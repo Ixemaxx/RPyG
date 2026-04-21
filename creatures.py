@@ -35,28 +35,34 @@ class Creature:
         self.defense += 20
 
 
-    def atk(self, move, opponent):
+    def atk(self, move, opponent, origin):
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
 
-        if efficacite == None:
-            return [f"{moves[move][0]} n'affecte pas le {opponent.name} adverse"]
+        if origin == "player":
+                lanceur = f"{self.name} utilise {moves[move][0]} !"
+                cible = f"le {opponent.name} adverse."
         else:
+            lanceur = f"Le {opponent.name} adverse utilise {moves[move][0]} !"
+            cible = f"votre {self.name}."
+
+        if efficacite == None:
+            return [f"{moves[move][0]} n'affecte pas", cible]
+            
+        else:
+
             if efficacite > 1:
-                msg = ["C'est super efficace !"]
+                msg = [lanceur, "C'est super efficace sur", cible]
             elif efficacite == 0.5:
-                msg = ["Ce n'est pas très efficace..."]
+                msg = [lanceur, "Ce n'est pas très efficace sur", cible]
             else:
-                msg = ["C'est efficace"]
+                msg = [lanceur, "C'est efficace sur", cible]
 
             if precision > random.randint(0,100): # attaque réussie
                 opponent.hp -= (moves[move][1] * efficacite)
-                if opponent.hp > 0:
-                    return msg
-                else:
-                    return [msg, f"Le {opponent.name} est K.O !"] # la liste permet d'afficher les infos sur 2 lignes différentes dans la boite de texte
+                return msg
             else: # attaque esquivée
-                return f"Le {opponent.name} a esquivé l'attaque !"
+                return f"{cible} a esquivé l'attaque !"
             
 
     def efficacite(self, move, type): # l'efficacité est aléatoire pour la démo, ça rajoute du peps on va dire

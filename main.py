@@ -664,40 +664,98 @@ def main():
                                 if btn.collidepoint(mouse_pos) and mouse_click and not action:
                                     action = True
                                     indice = i
-                                    checkup = {"p_atk": False, "adv_atk": False, "p_pp": False}
+                                    checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
 
                     elif action == True: # si action == True
                         # le checkup permet de se situer dans la boucle
-                        if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
+
+                        # on vérifie si les pykemons ont encore des pp (cas de lutte)
+                        PcanPlay = False
+                        for pp in dresseur.Player.team[0].pps:
+                            if pp != 0:
+                                PcanPlay = True
+
+                        AdvcanPlay = False
+                        for pp in dresseur.Player.encounter.pps:
+                            if pp != 0:
+                                AdvcanPlay = True
+
+                        AdvChoice = random.randint(0, len(dresseur.Player.encounter.moveset) - 1)
+
+                        if (dresseur.Player.team[0].pps[indice] > 0 or not PcanPlay) or checkup["p_atk"] == True: # PP joueur > 0 mais pas incapable d'attaquer
                             
                             if dresseur.Player.team[0].speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
-                                if checkup["p_atk"] == False:
-                                    dresseur.Player.team[0].pps[indice] -= 1
-                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
-                                    checkup["p_atk"] = True
-                                    fight_tab(RED) # on actualise les pv etc.
 
+                                if checkup["p_atk"] == False:
+                                    if PcanPlay:
+                                        dresseur.Player.team[0].pps[indice] -= 1
+                                        GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                        checkup["p_atk"] = True
+                                        fight_tab(RED) # on actualise les pv etc.
+                                    else:
+                                        if checkup["p_pp"] == False:
+                                            GlobalDialog = [f"Votre {dresseur.Player.team[0].name} n'a plus de", " capacité pour se battre."]
+                                            checkup["p_pp"] = True
+                            
+                                        if GlobalDialog == []:
+                                            GlobalDialog = dresseur.Player.team[0].atk("lutte", dresseur.Player.encounter, "player")
+                                            checkup["p_atk"] = True
+                                            fight_tab(RED) # on actualise les pv etc.
+                                    
+                                    
                                 elif checkup["adv_atk"] == False and GlobalDialog == []:
-                                    GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
-                                    checkup["adv_atk"] = True
-                                    fight_tab(RED) # on actualise les pv etc.
-                            else:
+                                    if AdvcanPlay:
+                                        GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[AdvChoice][5], dresseur.Player.team[0], "bot")
+                                        checkup["adv_atk"] = True
+                                        fight_tab(RED) # on actualise les pv etc.
+                                    else:
+                                        if checkup["adv_pp"] == False:
+                                            GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse n'a plus", "de capacité pour se battre."]
+                                            checkup["adv_pp"] = True
+                            
+                                        if GlobalDialog == []:
+                                            GlobalDialog = dresseur.Player.encounter.atk("lutte", dresseur.Player.team[0], "bot")
+                                            checkup["adv_atk"] = True
+                                            fight_tab(RED) # on actualise les pv etc.
+
+                            else: #si adversaire plus rapide: 
+                                               
                                 if checkup["adv_atk"] == False:
-                                    GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
-                                    checkup["adv_atk"] = True
-                                    fight_tab(RED) # on actualise les pv etc.
-                                
+                                    if AdvcanPlay:
+                                        GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[AdvChoice][5], dresseur.Player.team[0], "bot")
+                                        checkup["adv_atk"] = True
+                                        fight_tab(RED) # on actualise les pv etc.
+                                    else:
+                                        if checkup["adv_pp"] == False:
+                                            GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse n'a plus", "de capacité pour se battre."]
+                                            checkup["adv_pp"] = True
+                            
+                                        if GlobalDialog == []:
+                                            GlobalDialog = dresseur.Player.encounter.atk("lutte", dresseur.Player.team[0], "bot")
+                                            checkup["adv_atk"] = True
+                                            fight_tab(RED) # on actualise les pv etc.
+
                                 elif checkup["p_atk"] == False and GlobalDialog == []:
-                                    dresseur.Player.team[0].pps[indice] -= 1
-                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
-                                    checkup["p_atk"] = True
-                                    fight_tab(RED) # on actualise les pv etc.
+                                        if PcanPlay:
+                                            dresseur.Player.team[0].pps[indice] -= 1
+                                            GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                            checkup["p_atk"] = True
+                                            fight_tab(RED) # on actualise les pv etc.
+                                        else:
+                                            if checkup["p_pp"] == False:
+                                                GlobalDialog = [f"Votre {dresseur.Player.team[0].name} n'a plus de", " capacité pour se battre."]
+                                                checkup["p_pp"] = True
+                                
+                                            if GlobalDialog == []:
+                                                GlobalDialog = dresseur.Player.team[0].atk("lutte", dresseur.Player.encounter, "player")
+                                                checkup["p_atk"] = True
+                                                fight_tab(RED) # on actualise les pv etc.
 
         
                             # cas d'arrêt du tour
                             if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
                                 action = False
-
+    
                         else:
                             # cas d'arrêt du tour si plus de pp
                             if checkup["p_pp"] == False:
@@ -706,13 +764,9 @@ def main():
                                 
                             if GlobalDialog == []:
                                 action = False
+            
                             
-
-
-        
-
-                            
-
+  
 
         ## Lignes pour visualiser le centre de l'écran
         #pygame.draw.rect(screen, RED, pygame.Rect(WIDTH/2,0,1,HEIGHT))

@@ -10,9 +10,10 @@ heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
 
 # moves = [nom, dégats, pp, précision, type]
 moves = {"charge": ["Charge", 20, 1, 100, "normal", "charge", "atk"],
-         "dracom": ["Draco-Météores", 1, 5, 90, "dragon", "dracom", "atk2"],
+         "dracom": ["Draco-Météores", 130, 0, 90, "dragon", "dracom", "atk2"],
          "trempette": ["Trempette", 0, 1, 0, "eau", "trempette", None],
-         "soin": ["Soin", 0, 5, 1, "normal", "soin", "heal"]
+         "soin": ["Soin", 0, 0, 100, "normal", "soin", "heal"],
+         "lutte": ["Lutte", 50, 1, 100, "normal", "lutte", "lutte"]
          }
 
 class Creature:
@@ -26,8 +27,10 @@ class Creature:
         self.sprite = [s.copy() for s in sprite] # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.pps = []
+        self.usable_mvs = []
         for move in self.moveset:
             self.pps.append(move[2])
+            self.usable_mvs.append(move[5])
         self.type = type # str du nom du type
         self.lvl = lvl
         self.xp = 0
@@ -58,6 +61,29 @@ class Creature:
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
 
+        # on vérifie que le move est pas épuisé en PPs chez le bot (il pick au hasard puis par élimination)
+        if origin == "bot" and move != "lutte": # lutte n'est pas un move du pykemon, ça foutrait en l'air ce bout de code de le vérifier
+            print(self.pps)
+            for i in range(len(self.pps)):
+                if self.pps[i] <= 0:
+                    self.usable_mvs[i] = None
+
+            if not move in self.usable_mvs:
+                #print(move, " indisponible. Reroll")
+                choice = random.choice(self.usable_mvs)
+                while choice == None:
+                    #print("iteration")
+                    choice = random.choice(self.usable_mvs)
+                move = str(choice)
+                #print(move, "choisi à la place")
+
+            for i in range(len(self.usable_mvs)):
+                if self.usable_mvs[i] == move:
+                    BotPos = i
+            
+            self.pps[BotPos] -= 1 # on retire les pps du bot ici
+
+        # on définit le lanceur et la cible
         if origin == "player":
                 lanceur = f"{self.name} utilise {moves[move][0]} !"
                 cible = f"le {opponent.name} adverse."
@@ -65,14 +91,23 @@ class Creature:
             lanceur = f"Le {opponent.name} adverse utilise {moves[move][0]} !"
             cible = f"votre {self.name}."
 
+        # attaques particulières
         if moves[move][0] == "Trempette": #trempette bypass l'efficacité et la précision
             return [lanceur, "Cela n'a aucun effet."]
         
         if moves[move][0] == "Soin": # soin bypass aussi le reste
-            self.hp = int(abs(min(self.max_hp, self.hp + self.max_hp /2)))
+            self.hp = int(round(min(self.max_hp, self.hp + self.max_hp /2)))
             heal_snd.play()
             return [lanceur, "Il regagne des PV."]
+        
+        if moves[move][0] == "Lutte": # soin bypass aussi le reste
+            self.hp = int(max(0, self.hp - self.max_hp /4))
+            opponent.hp = round(max(opponent.hp - (((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite, 0))
+            atk_snd.play()
+            return [lanceur, "Il se blesse dans son attaque."]
 
+
+        # efficacité
         if efficacite == 0:
             return [lanceur, "Cela n'affecte pas", cible]      
         else:
@@ -83,10 +118,9 @@ class Creature:
             else:
                 msg = [lanceur, "C'est efficace sur", cible]
 
+            # précision de l'attaque
             if precision > random.randint(0,100): # attaque réussie
-                opponent.hp -= int(abs((((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite)) # vraie formule de pokemon
-                if opponent.hp < 0: 
-                    opponent.hp = 0
+                opponent.hp = int(round(max(opponent.hp - (((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite, 0))) # vraie formule de pokemon
                 
                 self.get_sound(moves[move][6]).play()
                 return msg

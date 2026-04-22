@@ -21,6 +21,7 @@ dia_font = pygame.font.Font("fonts/dogicapixelbold.otf", 20)
 font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
 pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
 font3 = pygame.font.Font("fonts/dogicapixelbold.otf", 21)
+lvlfont = pygame.font.Font("fonts/dogicapixelbold.otf", 26)
 
 # musiques
 wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
@@ -376,8 +377,8 @@ def fight_tab(tab):
     name_p2 = font3.render(f"{dresseur.Player.team[0].name}", True, BLACK)
     name_adv = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
 
-    lvl_p = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
-    lvl_adv = font3.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
+    lvl_p = lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
+    lvl_adv = lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE)
 
     if tab == BLUE: # fuite
         if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
@@ -427,12 +428,14 @@ def main():
     pack_map()
 
     dresseur.Player.team[0] = pkmns.copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
+    for i in range(dresseur.Player.team[0].lvl - 1):
+        dresseur.Player.team[0].lvlup()
 
     while running:
         keys = pygame.key.get_pressed()
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
-        if keys[pygame.K_x] and cooldown <= 0:
+        if keys[pygame.K_x] and cooldown <= 0 and phase == "game":
             cooldown = 1
             if menu == "None":
                 set_menu(1)
@@ -553,9 +556,9 @@ def main():
                                 defense = pykfont.render(f"Défense: {btn[0].defense}", True, WHITE)
                                 types = pykfont.render(f"Type: {btn[0].type}", True, WHITE)
                                 sprite = btn[0].sprite[0] # sprite de face
-                                sprite = pygame.transform.scale(sprite,(sprite.get_width() * 5,sprite.get_height() * 5))
                                 view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
                                 moveset = btn[0].moveset # pour chopper les infos des attaques
+                                pps = btn[0].pps
                                 tab_name = font.render("Infos Pykemon", WHITE, True)
                                 
                         else:
@@ -578,7 +581,7 @@ def main():
                     i = 0
                     for move in moveset: # boucle qui affiche les attaques avec leurs PPs
                         if move != None:
-                            screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: ? / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
+                            screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: {pps[i]} / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
                             i += 1
             else: 
                 print("menu inconnu")
@@ -630,9 +633,12 @@ def main():
                     screen.blit(hp_p, (20, HEIGHT * 0.505))
                     screen.blit(hp_adv, (WIDTH * 0.87, HEIGHT * 0.08))
 
-                    screen.blit(name_p2, (20, HEIGHT * 0.45))
+                    screen.blit(name_p2, (20, HEIGHT * 0.45)) # ombre pour rendre plus visible le nom du pykemon du joueur
                     screen.blit(name_p, (21, HEIGHT * 0.453))
                     screen.blit(name_adv, (WIDTH * 0.77, HEIGHT * 0.025))
+
+                    screen.blit(lvl_p, (383, HEIGHT * 0.453))
+                    screen.blit(lvl_adv, (WIDTH * 0.936, HEIGHT * 0.0275))
 
 
                     if not action and not fuite: # on cache l'interface
@@ -664,17 +670,29 @@ def main():
                         # le checkup permet de se situer dans la boucle
                         if dresseur.Player.team[0].pps[indice] > 0: # PP joueur > 0
                             
+                            if dresseur.Player.team[0].speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
+                                if checkup["p_atk"] == False:
+                                    dresseur.Player.team[0].pps[indice] -= 1
+                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                    checkup["p_atk"] = True
+                                    fight_tab(RED) # on actualise les pv etc.
 
-                            if checkup["p_atk"] == False:
-                                dresseur.Player.team[0].pps[indice] -= 1
-                                GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
-                                checkup["p_atk"] = True
-                                fight_tab(RED) # on actualise les pv etc.
+                                elif checkup["adv_atk"] == False and GlobalDialog == []:
+                                    GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
+                                    checkup["adv_atk"] = True
+                                    fight_tab(RED) # on actualise les pv etc.
+                            else:
+                                if checkup["adv_atk"] == False:
+                                    GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
+                                    checkup["adv_atk"] = True
+                                    fight_tab(RED) # on actualise les pv etc.
+                                
+                                elif checkup["p_atk"] == False and GlobalDialog == []:
+                                    dresseur.Player.team[0].pps[indice] -= 1
+                                    GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
+                                    checkup["p_atk"] = True
+                                    fight_tab(RED) # on actualise les pv etc.
 
-                            elif checkup["adv_atk"] == False and GlobalDialog == []:
-                                GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[random.randint(0, len(dresseur.Player.encounter.moveset) - 1)][5], dresseur.Player.team[0], "bot")
-                                checkup["adv_atk"] = True
-                                fight_tab(RED) # on actualise les pv etc.
         
                             # cas d'arrêt du tour
                             if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:

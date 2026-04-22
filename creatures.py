@@ -9,19 +9,20 @@ atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
 heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
 
 # moves = [nom, dégats, pp, précision, type]
-moves = {"charge": ["Charge", 20, 30, 100, "normal", "charge", "atk"],
-         "dracom": ["Draco-Météores", 70, 5, 90, "dragon", "dracom", "atk2"],
-         "trempette": ["Trempette", 0, 40, 0, "eau", "trempette", None],
-         "soin": ["Soin", 0, 5, 100, "normal", "soin", "heal"]
+moves = {"charge": ["Charge", 20, 1, 100, "normal", "charge", "atk"],
+         "dracom": ["Draco-Météores", 1, 5, 90, "dragon", "dracom", "atk2"],
+         "trempette": ["Trempette", 0, 1, 0, "eau", "trempette", None],
+         "soin": ["Soin", 0, 5, 1, "normal", "soin", "heal"]
          }
 
 class Creature:
-    def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map):
+    def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map, speed):
         self.name = name
         self.hp = hp # pour ajouter un peu de variété dans les stats des créatures 
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
+        self.speed = speed
         self.sprite = [s.copy() for s in sprite] # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.pps = []
@@ -37,11 +38,12 @@ class Creature:
     def lvlup(self):
         self.lvl += 1
         self.xp = 0
-        self.max_hp += 20
-        self.hp += 20
-        self.req_xp *= 1.3
-        self.attack += 20
-        self.defense += 20
+        self.max_hp += 2
+        self.hp += 2
+        self.req_xp *= 1.2
+        self.attack += 2
+        self.defense += 2
+        self.speed += 2
 
     def get_sound(self, snd):
         if snd == "atk":
@@ -67,7 +69,7 @@ class Creature:
             return [lanceur, "Cela n'a aucun effet."]
         
         if moves[move][0] == "Soin": # soin bypass aussi le reste
-            self.hp += int(abs((self.max_hp // 2) * random.choice([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])))
+            self.hp = int(abs(min(self.max_hp, self.hp + self.max_hp /2)))
             heal_snd.play()
             return [lanceur, "Il regagne des PV."]
 
@@ -82,7 +84,7 @@ class Creature:
                 msg = [lanceur, "C'est efficace sur", cible]
 
             if precision > random.randint(0,100): # attaque réussie
-                opponent.hp -= int(abs(moves[move][1] * efficacite))
+                opponent.hp -= int(abs((((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite)) # vraie formule de pokemon
                 if opponent.hp < 0: 
                     opponent.hp = 0
                 
@@ -108,7 +110,7 @@ def copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 50, 20, 20, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden"]}
+bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
 
 types = {
     "normal": {"roche": 0.5, "spectre": 0, "acier": 0.5},

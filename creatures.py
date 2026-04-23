@@ -1,13 +1,10 @@
 import pygame
 import random
+import assets
 
 pygame.mixer.init()
 pygame.display.set_mode((1920, 1080))
 
-# sounds
-atk_snd = pygame.mixer.Sound("sounds/atk.mp3")
-atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
-heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
 
 # moves = [nom, dégats, pp, précision, type]
 moves = {"charge": ["Charge", 20, 40, 100, "normal", "charge", "atk"],
@@ -51,11 +48,11 @@ class Creature:
 
     def get_sound(self, snd):
         if snd == "atk":
-            return atk_snd
+            return assets.atk_snd
         if snd == "atk2":
-            return atk2_snd
+            return assets.atk2_snd
         if snd == "heal":
-            return heal_snd
+            return assets.heal_snd
 
 
     def atk(self, move, opponent, origin):
@@ -63,20 +60,16 @@ class Creature:
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
 
         # on vérifie que le move est pas épuisé en PPs chez le bot (il pick au hasard puis par élimination)
-        if origin == "bot" and move != "lutte": # lutte n'est pas un move du pykemon, ça foutrait en l'air ce bout de code de le vérifier
-            print(self.pps)
+        if origin == "adv" and move != "lutte": # lutte n'est pas un move du pykemon, ça foutrait en l'air ce bout de code de le vérifier
             for i in range(len(self.pps)):
                 if self.pps[i] <= 0:
                     self.usable_mvs[i] = None
 
             if not move in self.usable_mvs:
-                #print(move, " indisponible. Reroll")
                 choice = random.choice(self.usable_mvs)
                 while choice == None:
-                    #print("iteration")
                     choice = random.choice(self.usable_mvs)
                 move = str(choice)
-                #print(move, "choisi à la place")
 
             for i in range(len(self.usable_mvs)):
                 if self.usable_mvs[i] == move:
@@ -85,7 +78,7 @@ class Creature:
             self.pps[BotPos] -= 1 # on retire les pps du bot ici
 
         # on définit le lanceur et la cible
-        if origin == "player":
+        if origin == "p":
                 lanceur = f"{self.name} utilise {moves[move][0]} !"
                 cible = f"le {opponent.name} adverse."
         else:
@@ -113,11 +106,11 @@ class Creature:
             return [lanceur, "Cela n'affecte pas", cible]      
         else:
             if efficacite > 1:
-                msg = [lanceur, "C'est super efficace sur", cible]
+                msg = [lanceur, f"C'est super efficace sur {cible}"]
             elif efficacite == 0.5:
-                msg = [lanceur, "Ce n'est pas très efficace sur", cible]
+                msg = [lanceur, f"Ce n'est pas très efficace sur {cible}"]
             else:
-                msg = [lanceur, "C'est efficace sur", cible]
+                msg = [lanceur, f"C'est efficace sur {cible}"]
 
             # précision de l'attaque
             if precision > random.randint(0,100): # attaque réussie
@@ -145,7 +138,7 @@ def copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
+bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [moves["charge"], moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
 
 types = {
     "normal": {"roche": 0.5, "spectre": 0, "acier": 0.5},

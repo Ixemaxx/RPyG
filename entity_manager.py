@@ -1,12 +1,14 @@
 import pygame
 import os
-from dresseur import Dresseur
+import dresseur
 import maps
 import random
 import creatures as pkmns
+import assets
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 pygame.display.set_mode((1920, 1080))
+pygame.mixer.init()
 
 entities = []
 case = 120 # côté d'une tile
@@ -33,7 +35,7 @@ class Entity(pygame.sprite.Sprite):
             else:
                 hitbox = None
 
-            self.npc = Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir, x=self.x, y=self.y, selfbox=hitbox)
+            self.npc = dresseur.Dresseur(npc_sprite,npc_name,npc_team,dir=npc_dir, x=self.x, y=self.y, selfbox=hitbox)
             self.npc.extract_anim() 
             self.npc.update(keys=0, dt=0, map=None, entities=None)
             self.npc.update_selfbox()
@@ -43,7 +45,7 @@ class Entity(pygame.sprite.Sprite):
             self.rect = self.image.get_rect(topleft=(x, y))
 
             self.dialog = npc_dialog # le dialogue
-            self.action = npc_action # dialogue 0, combat 1, échange 2, cadeau 3
+            self.action = npc_action # dialogue None, combat 1, échange 2, cadeau 3
 
         elif type == "grass":
             self.w =hitbox_w
@@ -76,8 +78,17 @@ class Entity(pygame.sprite.Sprite):
         elif self.type == "warp":
             self.hitbox.topleft = (self.x, self.y) # Met à jour la position de la hitbox
 
+    def make_action(self):
+        # dialogue 0, combat 1, échange 2, cadeau 3
+        if self.action == 4:
+            for pkmn in dresseur.Player.team:
+                if pkmn != None:
+                    pkmn.hp = pkmn.max_hp
+                    for i in range(len(pkmn.moveset)):
+                        pkmn.pps[i] = pkmn.moveset[i][2]
 
-
+            assets.heal_snd.play()
+            
 
 
 def get_curr_entities(map):
@@ -91,13 +102,22 @@ def get_curr_entities(map):
 
     return all_sprites
 
-
-little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
+# npcs
+mom_npc = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
                               state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
                              (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des PyKemons sauvages !"], npc_action = None)
                                 #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
-entities.append(little_garden_npc_1)
+
+entities.append(mom_npc)
+
+nurse_npc = Entity(type = "npc", x = case * 6 - (case * 0.87), y = case * 5 - case // 3, map = "lil_garden",\
+                              state = 0, npc_name = "Infirmière", npc_dir = "u", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Je vais soigner tes Pykemons","...", "Et voila ils sont en pleine forme !"], npc_action = 4)
+                                #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
+
+
+entities.append(nurse_npc)
 
 little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case * 5 , map="lil_garden",\
                                state = 0, warp_dest = maps.lil_house, warp_name = "lil_house",\

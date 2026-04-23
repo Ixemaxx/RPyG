@@ -2,6 +2,7 @@ from cmath import rect
 import pygame
 import os
 import random # pour la rotation aléatoire
+import assets
 
 
 pygame.init()

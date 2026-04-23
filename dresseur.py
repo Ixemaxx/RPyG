@@ -2,6 +2,7 @@ import pygame
 import maps
 import creatures as pkmns
 import random
+import assets
 
 pygame.init()
 pygame.mixer.init()
@@ -25,8 +26,7 @@ sp_tile_events = {2: ["banc",None], 3: ["banc",None], 5: ["grass","now"], 70: ["
 
 tile_size = 1920 // 16
 
-# sounds
-grass_snd = pygame.mixer.Sound("sounds/grass.mp3")
+
 
 
 anims = {
@@ -202,13 +202,14 @@ class Dresseur(pygame.sprite.Sprite):
     def get_interaction(self): # interact est une liste de type  [type,interaction] interaction contient les infos de l'interaction
 
         type = self.interact[0] #juste le type qui détermine si c'est un item, dia(l)ogue, banc, warpzone...
-        interact = self.interact[1]
+        interact = self.interact[1] # la variable interact (pas self.interact) c'est l'entité
         self.cooldown = 2.5
 
         if self.able and self.dialog == []:
             if type == "npc":
                 interact.npc.animate_dresseur(f"idle_{interact.npc.dir}")
                 self.dialog = [interact.dialog, interact.action, interact.npc.username]
+                interact.make_action()
                 self.able = False
             
             elif type == "banc" and self.dir == "u": # il faut être devant le banc pour pouvoir s'asseoir
@@ -226,7 +227,7 @@ class Dresseur(pygame.sprite.Sprite):
 
             elif type == "grass":
                 if self.snd_cooldown <= 0:
-                    grass_snd.play()
+                    assets.grass_snd.play()
                     self.snd_cooldown = 1
                 else:
                     self.snd_cooldown -= 0.06

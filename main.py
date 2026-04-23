@@ -5,6 +5,7 @@ import maps
 import entity_manager as entity_mgr
 import creatures as pkmns
 import random
+import assets
 
 # Initialisation de Pygame
 pygame.init()
@@ -22,9 +23,6 @@ font2 = pygame.font.Font("fonts/PixeloidSans.ttf", 55)
 pykfont = pygame.font.Font("fonts/PixeloidSans.ttf", 24)
 font3 = pygame.font.Font("fonts/dogicapixelbold.otf", 21)
 lvlfont = pygame.font.Font("fonts/dogicapixelbold.otf", 26)
-
-# musiques
-wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
 
 
 # États
@@ -155,7 +153,7 @@ def set_phase(new_phase, opponent=None):
         dresseur.Player.encounter = opponent
         TabState = f"Combat contre..."
         pygame.mixer.music.stop()
-        wild_snd.play()
+        assets.wild_snd.play()
         pygame.mixer.music.load("sounds/encounter.mp3")  # Charger la musique
 
 
@@ -402,21 +400,50 @@ def fight_tab(tab):
     elif tab == RED:
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
         fight_menu = {"rect": rect,
-                      "btns": [dresseur.Player.team[0].moveset[0], dresseur.Player.team[0].moveset[1], dresseur.Player.team[0].moveset[2], dresseur.Player.team[0].moveset[3]],
+                      "btns": [dresseur.Player.team[0].moveset[i] for i in range(len(dresseur.Player.team[0].moveset))],
                       "title": font.render("Attaques", True, WHITE),
                       "color": RED,
-                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[0][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[1][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[2][0], True, WHITE), pykfont.render(dresseur.Player.team[0].moveset[3][0], True, WHITE)],
+                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[j][0], True, WHITE) for j in range(len(dresseur.Player.team[0].moveset))],
                       #DMG, PP, Precision, type
-                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[0]} / {dresseur.Player.team[0].moveset[0][2]} PP", True, WHITE),
-                                   pykfont.render(f" {dresseur.Player.team[0].pps[1]} / {dresseur.Player.team[0].moveset[1][2]} PP", True, WHITE),
-                                 pykfont.render(f" {dresseur.Player.team[0].pps[2]} / {dresseur.Player.team[0].moveset[2][2]} PP", True, WHITE),
-                                  pykfont.render(f" {dresseur.Player.team[0].pps[3]} / {dresseur.Player.team[0].moveset[3][2]} PP", True, WHITE)], 
+                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[k]} / {dresseur.Player.team[0].moveset[k][2]} PP", True, WHITE) for k in range(len(dresseur.Player.team[0].moveset))], 
                       "type": "fight"}
         
 
         fight_color = fight_menu["color"]
 
+def fight_round(prefix_l, canPlay, checkup, choice):
+    global GlobalDialog
 
+    # prefix_lanceur / cible
+    if prefix_l == 'p':
+        lanceur = dresseur.Player.team[0]
+        cible = dresseur.Player.encounter
+    else:
+        lanceur = dresseur.Player.encounter
+        cible = dresseur.Player.team[0]
+
+    
+    # si le lanceur peut jouer (pps restants sur au moins 1 capacité)
+    if canPlay:
+        lanceur.pps[choice] -= 1
+        GlobalDialog = lanceur.atk(lanceur.moveset[choice][5], cible, prefix_l)
+        checkup[f"{prefix_l}_atk"] = True
+        fight_tab(RED) # on actualise les pv etc.
+    else:
+        if checkup[f"{prefix_l}_pp"] == False:
+            if prefix_l == "p": # on change le message en fct de qui joue
+                GlobalDialog = [f"Votre {lanceur.name} n'a plus de", " capacité pour se battre."]
+            else:
+                GlobalDialog = [f"Le {lanceur.name} adverse n'a plus", "de capacité pour se battre."]
+            checkup[f"{prefix_l}_pp"] = True
+
+        if GlobalDialog == []:
+            GlobalDialog = lanceur.atk("lutte", cible, prefix_l)
+            checkup[f"{prefix_l}_atk"] = True
+            fight_tab(RED) # on actualise les pv etc.
+
+    return checkup # c'est pas une variable globale donc on l'actualise ici
+        
 
 
 
@@ -689,71 +716,19 @@ def main():
                             if dresseur.Player.team[0].speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
 
                                 if checkup["p_atk"] == False:
-                                    if PcanPlay:
-                                        dresseur.Player.team[0].pps[indice] -= 1
-                                        GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
-                                        checkup["p_atk"] = True
-                                        fight_tab(RED) # on actualise les pv etc.
-                                    else:
-                                        if checkup["p_pp"] == False:
-                                            GlobalDialog = [f"Votre {dresseur.Player.team[0].name} n'a plus de", " capacité pour se battre."]
-                                            checkup["p_pp"] = True
-                            
-                                        if GlobalDialog == []:
-                                            GlobalDialog = dresseur.Player.team[0].atk("lutte", dresseur.Player.encounter, "player")
-                                            checkup["p_atk"] = True
-                                            fight_tab(RED) # on actualise les pv etc.
-                                    
-                                    
+                                    checkup = fight_round("p", PcanPlay, checkup, indice)
+                                          
                                 elif checkup["adv_atk"] == False and GlobalDialog == []:
-                                    if AdvcanPlay:
-                                        GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[AdvChoice][5], dresseur.Player.team[0], "bot")
-                                        checkup["adv_atk"] = True
-                                        fight_tab(RED) # on actualise les pv etc.
-                                    else:
-                                        if checkup["adv_pp"] == False:
-                                            GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse n'a plus", "de capacité pour se battre."]
-                                            checkup["adv_pp"] = True
-                            
-                                        if GlobalDialog == []:
-                                            GlobalDialog = dresseur.Player.encounter.atk("lutte", dresseur.Player.team[0], "bot")
-                                            checkup["adv_atk"] = True
-                                            fight_tab(RED) # on actualise les pv etc.
+                                    checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
 
                             else: #si adversaire plus rapide: 
                                                
                                 if checkup["adv_atk"] == False:
-                                    if AdvcanPlay:
-                                        GlobalDialog = dresseur.Player.encounter.atk(dresseur.Player.encounter.moveset[AdvChoice][5], dresseur.Player.team[0], "bot")
-                                        checkup["adv_atk"] = True
-                                        fight_tab(RED) # on actualise les pv etc.
-                                    else:
-                                        if checkup["adv_pp"] == False:
-                                            GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse n'a plus", "de capacité pour se battre."]
-                                            checkup["adv_pp"] = True
-                            
-                                        if GlobalDialog == []:
-                                            GlobalDialog = dresseur.Player.encounter.atk("lutte", dresseur.Player.team[0], "bot")
-                                            checkup["adv_atk"] = True
-                                            fight_tab(RED) # on actualise les pv etc.
-
+                                    checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
+                                    
                                 elif checkup["p_atk"] == False and GlobalDialog == []:
-                                        if PcanPlay:
-                                            dresseur.Player.team[0].pps[indice] -= 1
-                                            GlobalDialog = dresseur.Player.team[0].atk(dresseur.Player.team[0].moveset[indice][5], dresseur.Player.encounter, "player")
-                                            checkup["p_atk"] = True
-                                            fight_tab(RED) # on actualise les pv etc.
-                                        else:
-                                            if checkup["p_pp"] == False:
-                                                GlobalDialog = [f"Votre {dresseur.Player.team[0].name} n'a plus de", " capacité pour se battre."]
-                                                checkup["p_pp"] = True
-                                
-                                            if GlobalDialog == []:
-                                                GlobalDialog = dresseur.Player.team[0].atk("lutte", dresseur.Player.encounter, "player")
-                                                checkup["p_atk"] = True
-                                                fight_tab(RED) # on actualise les pv etc.
+                                    checkup = fight_round("p", PcanPlay, checkup, indice)
 
-        
                             # cas d'arrêt du tour
                             if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
                                 action = False
@@ -782,7 +757,7 @@ def main():
                     dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.45, HEIGHT * 0.20)
                     pygame.draw.rect(screen, BLACK, name_box)
 
-                    screen.blit(font.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.31, HEIGHT * 0.71))
+                    screen.blit(lvlfont.render(dresseur.Player.dialog[2], True, WHITE), (WIDTH * 0.306, HEIGHT * 0.705))
                     pygame.draw.rect(screen, BLACK, dialog_box)
                 else:
                     dialog_box = pygame.Rect(WIDTH * 0.30 , HEIGHT * 0.75, WIDTH * 0.48, HEIGHT * 0.20)

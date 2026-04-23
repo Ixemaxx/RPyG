@@ -6,6 +6,7 @@ import random
 import creatures as pkmns
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+pygame.display.set_mode((1920, 1080))
 
 entities = []
 case = 120 # côté d'une tile
@@ -92,7 +93,7 @@ def get_curr_entities(map):
 
 
 little_garden_npc_1 = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case // 3, map = "lil_house",\
-                              state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png"),\
+                              state = 0, npc_name = "Maman", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
                              (100,100)), npc_team = None, reward = 100, npc_dialog = ["Fais attention dehors","il y a des PyKemons sauvages !"], npc_action = None)
                                 #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 

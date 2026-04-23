@@ -5,6 +5,7 @@ import random
 
 pygame.init()
 pygame.mixer.init()
+pygame.display.set_mode((1920, 1080))
 
 # Couleurs
 WHITE = (255, 255, 255)
@@ -316,5 +317,5 @@ class Dresseur(pygame.sprite.Sprite):
             
 
 # Création des deux personnages
-Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/0.png"), (100,100)), username="Ixemax") 
+Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/0.png").convert_alpha(), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)

@@ -2,6 +2,7 @@ import pygame
 import random
 
 pygame.mixer.init()
+pygame.display.set_mode((1920, 1080))
 
 # sounds
 atk_snd = pygame.mixer.Sound("sounds/atk.mp3")
@@ -9,10 +10,10 @@ atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
 heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
 
 # moves = [nom, dégats, pp, précision, type]
-moves = {"charge": ["Charge", 20, 1, 100, "normal", "charge", "atk"],
-         "dracom": ["Draco-Météores", 130, 0, 90, "dragon", "dracom", "atk2"],
-         "trempette": ["Trempette", 0, 1, 0, "eau", "trempette", None],
-         "soin": ["Soin", 0, 0, 100, "normal", "soin", "heal"],
+moves = {"charge": ["Charge", 20, 40, 100, "normal", "charge", "atk"],
+         "dracom": ["Draco-Météores", 130, 5, 90, "dragon", "dracom", "atk2"],
+         "trempette": ["Trempette", 0, 1, 35, "eau", "trempette", None],
+         "soin": ["Soin", 0, 5, 100, "normal", "soin", "heal"],
          "lutte": ["Lutte", 50, 1, 100, "normal", "lutte", "lutte"]
          }
 
@@ -144,7 +145,7 @@ def copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png"), pygame.image.load("sprites/creatures/kackaburr_back.png")], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
+bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [moves["charge"],moves["dracom"],moves["trempette"],moves["soin"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
 
 types = {
     "normal": {"roche": 0.5, "spectre": 0, "acier": 0.5},

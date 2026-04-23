@@ -6,9 +6,10 @@ import random # pour la rotation aléatoire
 
 pygame.init()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+pygame.display.set_mode((1920, 1080))
 
 tilemap = []
-sprite_sheet = pygame.image.load("sprites/tilemap/Tileset.png")
+sprite_sheet = pygame.image.load("sprites/tilemap/Tileset.png").convert()
 sh_width = sprite_sheet.get_width() # = la hauteur car carré
 maplist = []
 isNewMap = False

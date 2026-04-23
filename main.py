@@ -103,7 +103,7 @@ btn_specs = {"save":"SAUVEGARDER",
 
 # vars combat
 
-fight_bg = pygame.image.load("sprites/battle/battle_intro.png")
+fight_bg = pygame.image.load("sprites/battle/battle_intro.png").convert()
 fight_intro = []
 intro = True
 for i in range(8): # animation de lancement de combat
@@ -117,14 +117,15 @@ action = False
 
 # images combat
 
-pbar = pygame.image.load("sprites/battle/hp_player.png")
-advbar = pygame.image.load("sprites/battle/hp_adv.png")
+pbar = pygame.image.load("sprites/battle/hp_player.png").convert_alpha()
+advbar = pygame.image.load("sprites/battle/hp_adv.png").convert_alpha()
 pbar = pygame.transform.scale(pbar, (pbar.get_width() * 4, pbar.get_height() * 4))
 advbar = pygame.transform.scale(advbar, (advbar.get_width() * 4, advbar.get_height() * 4))
 hp_p = pykfont.render("-- / -- PV", True, WHITE)
 hp_adv = pykfont.render("-- / -- PV", True, WHITE)
 p_color = GREEN
 adv_color = GREEN
+stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 
 
 
@@ -170,7 +171,7 @@ def get_intro_anim(id):
     if frame > len(fight_intro) - 1:
         intro = False
         frame = 0
-        fight_bg = pygame.transform.scale(pygame.image.load("sprites/battle/Forest.png"),(WIDTH,HEIGHT))
+        fight_bg = pygame.transform.scale(pygame.image.load("sprites/battle/Forest.png").convert(),(WIDTH,HEIGHT))
 
 
 
@@ -351,7 +352,7 @@ def get_dialog():
             dialog_cooldown = dialog_speed * 0.5
     
 def fight_tab(tab):
-    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, hp_p, hp_adv, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2 # blue=fuir, green=pkms, yellow=sac, red=atk
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, stats_ui # blue=fuir, green=pkms, yellow=sac, red=atk
 
     p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
     adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
@@ -370,15 +371,27 @@ def fight_tab(tab):
     else:
         adv_color = (255,0,0)
 
-    hp_p = font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE)
-    hp_adv = font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE)
+    # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
+    stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 
-    name_p = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
-    name_p2 = font3.render(f"{dresseur.Player.team[0].name}", True, BLACK)
-    name_adv = font3.render(f"{dresseur.Player.team[0].name}", True, WHITE)
+    stats_ui.blit(pbar, (0, HEIGHT * 0.45))
+    stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
-    lvl_p = lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE)
-    lvl_adv = lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE)
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
+
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
+
+    stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
+    stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
+
+    pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+
 
     if tab == BLUE: # fuite
         if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
@@ -410,7 +423,7 @@ def fight_tab(tab):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, p_color, adv_color, name_p, name_adv, lvl_p, lvl_adv, name_p2
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui
 
     clock = pygame.time.Clock()
     running = True
@@ -611,7 +624,8 @@ def main():
                 screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
-                    if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []: #si pykemons ko
+                    # Si pykemons K.O
+                    if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []:
                         GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
                         fuite = True
 
@@ -626,20 +640,8 @@ def main():
                         action = False
 
                     # barres d'hp
-                    screen.blit(pbar, (0, HEIGHT * 0.45))
-                    screen.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
-                    pygame.draw.rect(screen, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
-                    pygame.draw.rect(screen, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
-                    screen.blit(hp_p, (20, HEIGHT * 0.505))
-                    screen.blit(hp_adv, (WIDTH * 0.87, HEIGHT * 0.08))
-
-                    screen.blit(name_p2, (20, HEIGHT * 0.45)) # ombre pour rendre plus visible le nom du pykemon du joueur
-                    screen.blit(name_p, (21, HEIGHT * 0.453))
-                    screen.blit(name_adv, (WIDTH * 0.77, HEIGHT * 0.025))
-
-                    screen.blit(lvl_p, (383, HEIGHT * 0.453))
-                    screen.blit(lvl_adv, (WIDTH * 0.936, HEIGHT * 0.0275))
-
+                    # pour optimiser: fusionner toutes les infos des barres en une surface
+                    screen.blit(stats_ui, (0,0))
 
                     if not action and not fuite: # on cache l'interface
                         # boutons de jeu

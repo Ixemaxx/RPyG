@@ -9,3 +9,9 @@ wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
 atk_snd = pygame.mixer.Sound("sounds/atk.mp3")
 atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
 heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
+
+balls_tex = pygame.image.load("sprites/items/balls.png").convert_alpha()
+balls = {}
+def get_ball(col):
+    ball_frames = [] # contiendera chaque frame de la ball désirée
+    

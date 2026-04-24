@@ -355,40 +355,41 @@ def fight_tab(tab):
     p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
     adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
 
-    if p_ratio > 0.5:
-        p_color = GREEN
-    elif p_ratio > 0.15:
-        p_color = YELLOW
-    else:
-        p_color = (255,0,0)
+    if tab == RED:
+        if p_ratio > 0.5:
+            p_color = GREEN
+        elif p_ratio > 0.15:
+            p_color = YELLOW
+        else:
+            p_color = (255,0,0)
 
-    if adv_ratio > 0.5:
-        adv_color = GREEN
-    elif adv_ratio > 0.15:
-        adv_color = YELLOW
-    else:
-        adv_color = (255,0,0)
+        if adv_ratio > 0.5:
+            adv_color = GREEN
+        elif adv_ratio > 0.15:
+            adv_color = YELLOW
+        else:
+            adv_color = (255,0,0)
 
-    # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
-    stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+        # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
+        stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 
-    stats_ui.blit(pbar, (0, HEIGHT * 0.45))
-    stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
+        stats_ui.blit(pbar, (0, HEIGHT * 0.45))
+        stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
+        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
 
-    stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
-    stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
+        stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
+        stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
 
-    pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
-    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+        pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+        pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
 
 
     if tab == BLUE: # fuite
@@ -630,10 +631,14 @@ def main():
         elif phase == "fight":
             if intro and cooldown <= 0:
                 get_intro_anim(frame)
+                IsFightThemeStarted = False
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
                 GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
-                pygame.mixer.music.play(loops=-1, start=0.0)
+
+            if not IsFightThemeStarted and not pygame.mixer.get_busy():
+                    pygame.mixer.music.play(loops=-1, start=0.0)
+                    IsFightThemeStarted = True
 
             screen.blit(fight_bg,(0,0))
 
@@ -655,6 +660,7 @@ def main():
                     if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []:
                         GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
                         fuite = True
+                        action = False
 
                     if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
@@ -675,7 +681,7 @@ def main():
                         for element in fight_ui:
                             rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
                             screen.blit(element[2], (rect.centerx - element[2].get_width() / 2 , rect.centery - 22))
-                            if rect.collidepoint(mouse_pos) and mouse_click:
+                            if rect.collidepoint(mouse_pos) and mouse_click and GlobalDialog == []:
                                 fight_tab(element[0]) # le bouton est déterminé par sa couleur, tel un identifiant
 
                         # menu d'attaques, sac etc.

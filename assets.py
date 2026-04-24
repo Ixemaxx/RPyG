@@ -2,6 +2,7 @@ import pygame
 
 pygame.init()
 pygame.mixer.init()
+pygame.display.set_mode((1920, 1080))
 
 # sounds
 grass_snd = pygame.mixer.Sound("sounds/grass.mp3")

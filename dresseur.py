@@ -30,14 +30,14 @@ tile_size = 1920 // 16
 
 
 anims = {
-            "idle_d": [3],
-            "idle_l": [6],
-            "idle_r": [9],
-            "idle_u": [0],
-            "walk_d": [4,3,5],
-            "walk_l": [7,6,8],
-            "walk_r": [10,9,11],
-            "walk_u": [1,0,2]
+        "idle_d": [3],
+        "idle_l": [6],
+        "idle_r": [9],
+        "idle_u": [0],
+        "walk_d": [4,3,5],
+        "walk_l": [7,6,8],
+        "walk_r": [10,9,11],
+        "walk_u": [1,0,2]
         }
 
 class Dresseur(pygame.sprite.Sprite):
@@ -52,7 +52,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
         self.team = [None for i in range(6)]
-        self.inv = {"ball0": 99, "potion": 99, "rappel": 99, "dex": 1}
+        self.inv = {"pykeball": 99, "potion": 99, "rappel": 99, "dex": 1}
         #animations
         self.anim = ""
         self.curr_creature = None #creature actuelle en combat

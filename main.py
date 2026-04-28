@@ -230,7 +230,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
             txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
             btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
 
-        if menu == "pykemon":
+        elif menu == "pykemon":
             width = WIDTH // 3
             height = 0.3 * HEIGHT
             btn_w = 0.8 * width
@@ -264,6 +264,49 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
                     texte = font.render(name, True, WHITE)
                 except:
                     texte = font.render("Vide", True, WHITE)
+
+                btn_list[i].append(rect)
+                btn_list[i].append(texte)
+                btn_list[i].append(texte.get_width())
+                btn_list[i].append(btn_datas[0])
+
+
+            txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
+            btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
+
+        elif menu == "sac":
+            width = WIDTH // 3
+            height = 0.3 * HEIGHT
+            btn_w = 0.8 * width
+            btn_h = 0.7 * height
+
+        
+            menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
+            btn_list = [[assets.sac_parts[i]] for i in range(len(assets.sac_parts))] # on récupère les infos du sac
+            btn_datas = [[(122,90,0),DARK_YELLOW]]
+
+            menu_color1 = DARK_YELLOW # fenetre du fond et texte dans les boutons
+            menu_color2 = YELLOW # boutons et textes hors des boutons
+            menu_colorh = (122,90,0)
+
+            menu_title = "Sac"
+            menu_title_pos = [WIDTH * 0.01, HEIGHT * 0.015]
+            
+            # btns
+            btn_txt_x = WIDTH / 2 - btn_w / 2
+            btn_txt_y = HEIGHT * 0.3
+            btn_txt_offest = HEIGHT * 0.09 # différence
+
+            for i in range(len(btn_list)): # liste = [id, rect, texte, width, colors]
+                if i < 3:
+                    rect = pygame.Rect((WIDTH * 0.05 * (i + 1)) + (i * btn_w), (HEIGHT * 0.25), btn_w, btn_h) # ligne 1 menu
+                else:
+                    rect = pygame.Rect((WIDTH * 0.05 * (i - 2)) + ((i - 3) * btn_w), (HEIGHT * 0.55), btn_w, btn_h) # ligne 2 menu
+
+
+                part = str(btn_list[i][0])
+                texte = font.render(part, True, WHITE)
+
 
                 btn_list[i].append(rect)
                 btn_list[i].append(texte)
@@ -582,7 +625,7 @@ def main():
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
 
             elif menu == "pykemon": # vue d'un seul pokémon de l'équipe
-                if sous_menu == None: # on vérifie le sous menu => None = équiê, 1 = vue d'un pokémon
+                if sous_menu == None: # on vérifie le sous menu => None = équipe, 1 = vue d'un pokémon
                     for i, btn in enumerate(btn_list):
                         if btn[1].collidepoint(mouse_pos):
                             color2 = btn[4][0]
@@ -624,6 +667,46 @@ def main():
                         if move != None:
                             screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: {pps[i]} / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
                             i += 1
+            elif menu == "sac":
+                if sous_menu == None:
+                    for i, btn in enumerate(btn_list):
+                        if btn[1].collidepoint(mouse_pos):
+                            color2 = btn[4][0]
+                            if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
+                                cooldown = 1
+                                sous_menu = i + 1 
+                                print(btn)
+                                part_name = pykfont.render(f"PyKemon: {btn[0]}",  True, WHITE)
+                                sprite = btn[0] # sprite de face
+                                view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
+                                tab_name = font.render(f"Sac - {btn[0]}", WHITE, True)
+                                sous_menu = btn[0]
+                                
+                                items = {}
+                                # on définit les items visibles
+                                for item in dresseur.Player.inv:
+                                    if assets.inventory[item]["type"] == sous_menu:
+                                        # items[item] = [nom, qtté, texture]
+                                        items[item] = [item, dresseur.Player.inv[item], assets.inventory[item]['tex']]
+
+                                
+                        else:
+                            color2 = btn[4][1]
+                        pygame.draw.rect(screen, color2, btn[1]) # color2
+                        screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
+                else:
+                    
+                    # Menu infos du pykemon
+                    pygame.draw.rect(screen, menu_color1, view_rect)
+                    screen.blit(tab_name, (WIDTH * 0.04, HEIGHT * 0.17))
+                    screen.blit(part_name, (WIDTH * 0.04, HEIGHT * 0.24))
+                    screen.blit(sprite, (WIDTH * 0.9 - sprite.get_width() // 2, HEIGHT * 0.1))
+                    i = 0
+                    for move in moveset: # boucle qui affiche les attaques avec leurs PPs
+                        if move != None:
+                            screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: {pps[i]} / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
+                            i += 1
+                    
             else: 
                 print("menu inconnu")
 

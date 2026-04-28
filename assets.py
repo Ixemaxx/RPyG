@@ -14,37 +14,70 @@ heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
 
 # génération des animations de balls
 balls_tex = pygame.image.load("sprites/items/balls.png").convert_alpha()
+items_tex = pygame.image.load("sprites/items/items.png").convert_alpha()
 balls = {}
 
 def get_ball(col, name):
-    ball_frames = [] # contiendera chaque frame de la ball désirée
+    ball_frames = []
     grid_size = 17
-    case_size = balls_tex.get_width() / 17
+    # On s'assure que case_size est un entier pour Pygame
+    case_size = balls_tex.get_width() / grid_size
 
-    for x in range(grid_size):
-        if x == col:
-            for y in range(grid_size):
-                rect = pygame.Rect(x, y, x + case_size, y + case_size)
-                ball_frames.append(pygame.transform.scale(balls_tex.subsurface(rect), (98, 98)))
+    # On calcule la position X une seule fois (colonne * taille d'une case)
+    pos_x = col * case_size
 
-            balls[name] = ball_frames
-            break
+    for y in range(grid_size):
+        # Rect(x_depart, y_depart, largeur, hauteur)
+        rect = pygame.Rect(pos_x, y * case_size, case_size, case_size)
+        
+        # subsurface extrait la zone, scale la redimensionne
+        frame = balls_tex.subsurface(rect)
+        ball_frames.append(pygame.transform.scale(frame, (98, 98)))
+
+    balls[name] = ball_frames
 
     
 get_ball(3, "pykeball") # colonnes de 0 à 16 (17 en tout)
 get_ball(2, "superball") # colonnes de 0 à 16 (17 en tout)
+get_ball(1, "hyperball") # colonnes de 0 à 16 (17 en tout)
+get_ball(0, "masterball") # colonnes de 0 à 16 (17 en tout)
+
+def get_item(case_x, case_y): # on commence en (1,1) ici
+    width = 16
+    height = 35
+    # On s'assure que case_size est un entier pour Pygame
+    case_w = items_tex.get_width() / width
+    case_h = items_tex.get_height() / height
+
+    # On calcule la position X une seule fois (colonne * taille d'une case)
+    pos_x = (case_x - 1) * case_w
+    pos_y = (case_y - 1)* case_h
+
+    
+    rect = pygame.Rect(pos_x, pos_y, case_w, case_h)
+    # subsurface extrait la zone, scale la redimensionne
+    frame = items_tex.subsurface(rect)
+    return pygame.transform.scale(frame, (98, 98))
+
+
 
 # inventaire
 sac_parts = ["heals","balls","unique"]
+traduction_part = {'heals': 'Soins', 'balls': 'Balls', 'unique': 'Objets Clés'}
 inventory = {
     # balls
-    "pykeball": {'type': 'balls', 'tex': balls['pykeball']},
-    "superball": {'type': 'balls', 'tex': balls['superball']},
+    "pykeball": {'type': 'balls', 'tex': get_item(4, 1), 'alias': "PyKeball", 'desc': ["Un objet qui permet d'attraper", "des PyKemons sauvages."]},
+    "superball": {'type': 'balls', 'tex': get_item(3, 1), 'alias': "Superball", 'desc': ["Un objet qui permet d'attraper", "des PyKemons sauvages avec", "une meilleure efficacité", "que la PyKeball"]},
+    "hyperball": {'type': 'balls', 'tex': get_item(2, 1), 'alias': "Hyperball", 'desc': ["Un objet qui permet d'attraper", "des PyKemons sauvages avec", "une excellente efficacité."]},
+    "masterball": {'type': 'balls', 'tex': get_item(1, 1), 'alias': "Masterball", 'desc': ["Un objet extrêmement rare", "et convoité qui permet", "d'attraper un PyKemon à", "coup sûr."]},
     # heals
-    "potion": {'type': 'heals', 'tex': balls['pykeball']},
-    "rappel": {'type': 'heals', 'tex': balls['pykeball']},
+    "potion": {'type': 'heals', 'tex': get_item(11, 1), "alias": "Potion", 'desc': ["Permet de gagner 20PV"]},
+    "rappel": {'type': 'heals', 'tex': get_item(11, 2), 'alias': 'Rappel', 'desc': ["Permet de réanimer un PyKemon K.O", "à hauteur de la moitié de ses PV"]},
+    "rappel_max": {'type': 'heals', 'tex': get_item(6, 2), 'alias': 'Rappel Max', 'desc': ["Permet de réanimer un PyKemon K.O", "à hauteur de tous ses PV"]},
+    "total_soin": {'type': 'heals', 'tex': get_item(5, 2), 'alias': 'Total Soin', 'desc': ["De la morphine, pour faire", "oublier à vos pykemons", "qu'ils sont brûlés, gelés", "endormis, paralysés...", "Espèce de monstre."]},
+    "guerison": {'type': 'heals', 'tex': get_item(1, 2), 'alias': 'Guérison', 'desc': ["De la magie noire en flacon","je vois que ça.","Redonne tous les pvs."]},
     # unique
-    "dex": {'type': 'unique', 'tex': balls['pykeball']}
+    "dex": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'PyKedex', 'desc': ["Un genre d'appareil photo made in", "China qui enregistre les infos", "des PyKemons attrapés"]}
 }
 
 

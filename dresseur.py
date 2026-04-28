@@ -52,7 +52,18 @@ class Dresseur(pygame.sprite.Sprite):
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
         self.team = [None for i in range(6)]
-        self.inv = {"pykeball": 99, "potion": 99, "rappel": 99, "dex": 1}
+        self.inv = {"pykeball": 99,
+                     "superball": 99,
+                     "hyperball": 99,
+                     "masterball": 99,
+                     #soins
+                     "potion": 99, 
+                     "guerison": 99,
+                     "rappel": 99, 
+                     "rappel_max": 99,
+                     "total_soin": 99,
+                     #uniques
+                     "dex": 1}
         #animations
         self.anim = ""
         self.curr_creature = None #creature actuelle en combat

@@ -163,6 +163,7 @@ def set_phase(new_phase, opponent=None):
 def get_intro_anim(id):
     global frame, intro, fight_bg, cooldown
 
+    
     fight_bg = fight_intro[id]
     frame = id + 1
     cooldown = 0.6
@@ -435,12 +436,15 @@ def fight_tab(tab):
         pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
 
 
+
+
     if tab == BLUE: # fuite
         if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
             GlobalDialog = ["Vous prenez la fuite !"]
             fuite = True
         else:
             GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
+
     elif tab == RED:
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
         fight_menu = {"rect": rect,
@@ -450,10 +454,35 @@ def fight_tab(tab):
                       "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[j][0], True, WHITE) for j in range(len(dresseur.Player.team[0].moveset))],
                       #DMG, PP, Precision, type
                       "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[k]} / {dresseur.Player.team[0].moveset[k][2]} PP", True, WHITE) for k in range(len(dresseur.Player.team[0].moveset))], 
-                      "type": "fight"}
+                      "type": "fight",
+                      'bag_type': None}
         
 
         fight_color = fight_menu["color"]
+
+    elif tab == YELLOW:
+        rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
+        if fight_menu['bag_type'] == None:
+            fight_menu = {"rect": rect,
+                        "btns": ["heals","balls"],
+                        "title": font.render("Sac", True, WHITE),
+                        "color": YELLOW,
+                        "btns-text": [pykfont.render(assets.traduction_part["heal"], True, WHITE), pykfont.render(assets.traduction_part["balls"], True, WHITE)],
+                        #DMG, PP, Precision, type
+                        "subtext": [], 
+                        "type": "bag",
+                        'bag_type': None}
+        else:
+            btns = []
+            for item in dresseur.Player.inv:
+                if assets.inventory[item]['type'] == fight_menu['bag_type']:
+                    btns.append(item)
+
+            if btns != []:
+                GlobalDialog = ["Vous n'avez pas d'objets de type", f"{assets.traduction_part[fight_menu['bag_type']]} dans votre inventaire."]
+                fight_menu['bag_type'] = btns
+                fight_tab[YELLOW]
+
 
 def fight_round(prefix_l, canPlay, checkup, choice):
     global GlobalDialog
@@ -667,6 +696,7 @@ def main():
                         if move != None:
                             screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: {pps[i]} / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
                             i += 1
+
             elif menu == "sac":
                 if sous_menu == None:
                     for i, btn in enumerate(btn_list):
@@ -675,19 +705,17 @@ def main():
                             if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
                                 cooldown = 1
                                 sous_menu = i + 1 
-                                print(btn)
-                                part_name = pykfont.render(f"PyKemon: {btn[0]}",  True, WHITE)
-                                sprite = btn[0] # sprite de face
+                                desc = [pykfont.render("",  True, WHITE)]
                                 view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
-                                tab_name = font.render(f"Sac - {btn[0]}", WHITE, True)
-                                sous_menu = btn[0]
+                                tab_name = font.render(assets.traduction_part[btn[0]], WHITE, True)
+                                sous_menu = 1
                                 
                                 items = {}
                                 # on définit les items visibles
                                 for item in dresseur.Player.inv:
-                                    if assets.inventory[item]["type"] == sous_menu:
-                                        # items[item] = [nom, qtté, texture]
-                                        items[item] = [item, dresseur.Player.inv[item], assets.inventory[item]['tex']]
+                                    if assets.inventory[item]["type"] == btn[0]:
+                                        # items[item] = [nom, qtté, texture, desc]
+                                        items[item] = [item, font.render(f"x{str(dresseur.Player.inv[item])}", WHITE, True), assets.inventory[item]['tex'], font.render(assets.inventory[item]['alias'], WHITE, True), assets.inventory[item]['desc']]
 
                                 
                         else:
@@ -695,17 +723,33 @@ def main():
                         pygame.draw.rect(screen, color2, btn[1]) # color2
                         screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
                 else:
-                    
-                    # Menu infos du pykemon
-                    pygame.draw.rect(screen, menu_color1, view_rect)
-                    screen.blit(tab_name, (WIDTH * 0.04, HEIGHT * 0.17))
-                    screen.blit(part_name, (WIDTH * 0.04, HEIGHT * 0.24))
-                    screen.blit(sprite, (WIDTH * 0.9 - sprite.get_width() // 2, HEIGHT * 0.1))
                     i = 0
-                    for move in moveset: # boucle qui affiche les attaques avec leurs PPs
-                        if move != None:
-                            screen.blit(pykfont.render(f'- {moveset[i][0]}  [PP: {pps[i]} / {moveset[i][2]}]', True, WHITE), (WIDTH * 0.05, HEIGHT * (0.64 + 0.05 * i )))
-                            i += 1
+                    for item in items:
+                        i += 1
+                        item_rect = pygame.Rect(WIDTH / 3, (i * HEIGHT / 10) + 55, WIDTH / 3, HEIGHT * 0.09)
+                        if item_rect.collidepoint(mouse_pos):
+                            color2 = (251, 246, 43)
+                            desc = []
+                            for ligne in assets.inventory[item]['desc']:          # si ça lag trop sur loRdi, passer ça dans le click
+                                desc.append(pykfont.render(ligne, WHITE, True))
+
+                            if mouse_click and cooldown <= 0 and not btn[0] == None:
+                                pass # garder ça au cas où ça lag sur loRdi
+                        else:
+                            color2 = DARK_YELLOW
+
+                        # items[item] = [nom, qtté, texture, nom_render, desc]
+                        pygame.draw.rect(screen, color2, item_rect) # color2
+                        screen.blit(items[item][3], (WIDTH / 3 + items[item][2].get_width(),(i * HEIGHT / 10) + 85)) # texte
+                        screen.blit(items[item][1], (WIDTH * 0.6,(i * HEIGHT / 10) + 85)) # qtté
+                        screen.blit(items[item][2], (WIDTH / 3 + 10, (i * HEIGHT / 10) + 65)) # texture
+
+
+                    # Contenu d'une partie du sac
+                    pygame.draw.rect(screen, menu_color1, view_rect) # barre latérale gauche verticale
+                    screen.blit(tab_name, (WIDTH * 0.04, HEIGHT * 0.17))
+                    for i in range(len(desc)):
+                        screen.blit(desc[i], (WIDTH * 0.04, HEIGHT * 0.24 + (i * HEIGHT * 0.03)))
                     
             else: 
                 print("menu inconnu")

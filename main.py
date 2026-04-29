@@ -457,8 +457,9 @@ def fight_tab(tab):
                       "type": "fight",
                       'bag_type': None}
         
-
         fight_color = fight_menu["color"]
+        
+
 
     elif tab == YELLOW:
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
@@ -467,21 +468,28 @@ def fight_tab(tab):
                         "btns": ["heals","balls"],
                         "title": font.render("Sac", True, WHITE),
                         "color": YELLOW,
-                        "btns-text": [pykfont.render(assets.traduction_part["heal"], True, WHITE), pykfont.render(assets.traduction_part["balls"], True, WHITE)],
+                        "btns-text": [pykfont.render(assets.traduction_part["heals"], True, WHITE), pykfont.render(assets.traduction_part["balls"], True, WHITE)],
                         #DMG, PP, Precision, type
                         "subtext": [], 
                         "type": "bag",
                         'bag_type': None}
         else:
             btns = []
+            btns_text = []
             for item in dresseur.Player.inv:
                 if assets.inventory[item]['type'] == fight_menu['bag_type']:
                     btns.append(item)
+                    btns_text.append(pykfont.render(f"x{dresseur.Player.inv[item]} - {assets.inventory[item]['alias']}", True, WHITE))
 
-            if btns != []:
+            if btns == []:
                 GlobalDialog = ["Vous n'avez pas d'objets de type", f"{assets.traduction_part[fight_menu['bag_type']]} dans votre inventaire."]
-                fight_menu['bag_type'] = btns
+                fight_menu['bag_type'] = None
                 fight_tab[YELLOW]
+            else:
+                fight_menu['btns'] = btns
+                fight_menu['btns-text'] = btns_text
+
+        fight_color = fight_menu["color"]
 
 
 def fight_round(prefix_l, canPlay, checkup, choice):
@@ -815,8 +823,9 @@ def main():
                         pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
                         screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
 
-                        for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
-                            if fight_color == RED: #Attaques
+                        
+                        if fight_color == RED: #Attaques
+                            for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
                                 y_offset = HEIGHT * 0.58 if i < 2 else HEIGHT * 0.68
                                 x_offset = WIDTH * 0.72 + (i % 2) * WIDTH * 0.127
                                 btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.09))
@@ -827,6 +836,19 @@ def main():
                                     action = True
                                     indice = i
                                     checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
+
+                        elif fight_color == YELLOW:
+                            for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
+                                y_offset = HEIGHT * 0.58 + (i * HEIGHT * 0.06) if i < 3 else HEIGHT * 0.58 + ((i - 3) * HEIGHT * 0.06)
+                                x_offset = WIDTH * 0.72 if i < 3 else WIDTH * 0.72 + WIDTH * 0.127
+                                btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.05))
+                                screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                                #screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action:
+                                    if fight_menu['bag_type'] == None:
+                                        fight_menu['bag_type'] = fight_menu['btns'][i]
+                                        fight_tab(YELLOW)
 
                     elif action == True: # si action == True
                         # le checkup permet de se situer dans la boucle

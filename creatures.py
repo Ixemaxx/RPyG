@@ -91,13 +91,13 @@ class Creature:
         
         if moves[move][0] == "Soin": # soin bypass aussi le reste
             self.hp = int(round(min(self.max_hp, self.hp + self.max_hp /2)))
-            heal_snd.play()
+            assets.heal_snd.play()
             return [lanceur, "Il regagne des PV."]
         
         if moves[move][0] == "Lutte": # soin bypass aussi le reste
             self.hp = int(max(0, self.hp - self.max_hp /4))
             opponent.hp = round(max(opponent.hp - (((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite, 0))
-            atk_snd.play()
+            assets.atk_snd.play()
             return [lanceur, "Il se blesse dans son attaque."]
 
 

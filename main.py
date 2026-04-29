@@ -451,9 +451,9 @@ def fight_tab(tab):
                       "btns": [dresseur.Player.team[0].moveset[i] for i in range(len(dresseur.Player.team[0].moveset))],
                       "title": font.render("Attaques", True, WHITE),
                       "color": RED,
-                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[j][0], True, WHITE) for j in range(len(dresseur.Player.team[0].moveset))],
+                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[j][0], True, WHITE if dresseur.Player.team[0].pps[j] > 0 else RED) for j in range(len(dresseur.Player.team[0].moveset))],
                       #DMG, PP, Precision, type
-                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[k]} / {dresseur.Player.team[0].moveset[k][2]} PP", True, WHITE) for k in range(len(dresseur.Player.team[0].moveset))], 
+                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[k]} / {dresseur.Player.team[0].moveset[k][2]} PP", True, WHITE if dresseur.Player.team[0].pps[k] > 0 else RED) for k in range(len(dresseur.Player.team[0].moveset))], 
                       "type": "fight",
                       'bag_type': None}
         
@@ -478,8 +478,12 @@ def fight_tab(tab):
             btns_text = []
             for item in dresseur.Player.inv:
                 if assets.inventory[item]['type'] == fight_menu['bag_type']:
+                    if dresseur.Player.inv[item] > 0:
+                        color = WHITE
+                    else:
+                        color = RED
                     btns.append(item)
-                    btns_text.append(pykfont.render(f"x{dresseur.Player.inv[item]} - {assets.inventory[item]['alias']}", True, WHITE))
+                    btns_text.append(pykfont.render(f"x{dresseur.Player.inv[item]} - {assets.inventory[item]['alias']}", True, color))
 
             if btns == []:
                 GlobalDialog = ["Vous n'avez pas d'objets de type", f"{assets.traduction_part[fight_menu['bag_type']]} dans votre inventaire."]

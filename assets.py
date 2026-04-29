@@ -80,4 +80,6 @@ inventory = {
     "dex": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'PyKedex', 'desc': ["Un genre d'appareil photo made in", "China qui enregistre les infos", "des PyKemons attrapés"]}
 }
 
+def item_effect(item):
+    pass
 

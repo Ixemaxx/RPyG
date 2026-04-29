@@ -61,7 +61,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.3
+GameVersion = 0.4
 TabState = "Loading"
 
 cooldown = 0
@@ -399,41 +399,40 @@ def fight_tab(tab):
     p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
     adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
 
-    if tab == RED:
-        if p_ratio > 0.5:
-            p_color = GREEN
-        elif p_ratio > 0.15:
-            p_color = YELLOW
-        else:
-            p_color = (255,0,0)
+    if p_ratio > 0.5:
+        p_color = GREEN
+    elif p_ratio > 0.15:
+        p_color = YELLOW
+    else:
+        p_color = (255,0,0)
 
-        if adv_ratio > 0.5:
-            adv_color = GREEN
-        elif adv_ratio > 0.15:
-            adv_color = YELLOW
-        else:
-            adv_color = (255,0,0)
+    if adv_ratio > 0.5:
+        adv_color = GREEN
+    elif adv_ratio > 0.15:
+        adv_color = YELLOW
+    else:
+        adv_color = (255,0,0)
 
-        # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
-        stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+    # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
+    stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 
-        stats_ui.blit(pbar, (0, HEIGHT * 0.45))
-        stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
+    stats_ui.blit(pbar, (0, HEIGHT * 0.45))
+    stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
-        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
-        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
 
-        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
-        stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
 
-        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
-        stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
 
-        stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
-        stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
+    stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
+    stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
 
-        pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
-        pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+    pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
 
 
 
@@ -494,6 +493,37 @@ def fight_tab(tab):
                 fight_menu['btns-text'] = btns_text
 
         fight_color = fight_menu["color"]
+
+def item_effect(item, pykemon, origin):
+
+    if origin == "p":
+        lanceur = f"Votre {pykemon.name}"
+        cible = f"Le {pykemon.name} adverse" # je remplacerai par le bon préfixe, car le joueur n'utilise pas dd'objet sur l'ennemi 
+    else:
+        lanceur = f"Le {pykemon.name} adverse"
+        cible = f"votre {pykemon.name}"
+
+    # soins
+    if item == 'potion':
+        pykemon.hp = min(pykemon.hp + 20, pykemon.max_hp)
+        assets.heal_snd.play()
+        return [f"Vous utilisez une potion sur {lanceur}", "Il regagne 20 PVs."]
+    
+    elif item == 'rappel':
+        pykemon.hp = int(round(pykemon.max_hp / 2))
+        assets.heal_snd.play()
+        return [f"Vous utilisez un rappel sur {lanceur}", "Il n'est plus K.O !"]
+    
+    elif item == 'rappel_max' or item == 'guerison': # même action dans le code
+        pykemon.hp = int(pykemon.max_hp)
+        assets.heal_snd.play()
+        # pykemon.status = None
+        return [f"Vous utilisez une guérison sur {lanceur}" if item == 'guerison' else f"Vous utilisez un rappel max sur {lanceur}", "Il regagne toute sa vie"] 
+    
+    if item == 'total_soin':
+        # pykemon.status = None
+        assets.heal_snd.play()
+        return [f"Vous utilisez un total soin sur {lanceur}", "Il n'a plus d'effet de status !'"]
 
 
 def fight_round(prefix_l, canPlay, checkup, choice):
@@ -836,7 +866,8 @@ def main():
                                 screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
                                 screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
 
-                                if btn.collidepoint(mouse_pos) and mouse_click and not action:
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action and cooldown <= 0:
+                                    cooldown = 1
                                     action = True
                                     indice = i
                                     checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
@@ -849,12 +880,30 @@ def main():
                                 screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
                                 #screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
 
-                                if btn.collidepoint(mouse_pos) and mouse_click and not action:
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action and GlobalDialog == [] and cooldown <= 0:
+                                    cooldown = 1
                                     if fight_menu['bag_type'] == None:
                                         fight_menu['bag_type'] = fight_menu['btns'][i]
                                         fight_tab(YELLOW)
+                                    else:
+                                        if dresseur.Player.inv[fight_menu['btns'][i]] <= 0:
+                                            GlobalDialog = [f"Vous n'avez plus de {assets.inventory[fight_menu['btns'][i]]['alias']}."]
+                                        else:
+                                            dresseur.Player.inv[fight_menu['btns'][i]] -= 1
+                                            action = True
+                                            checkup = {"p_atk": True, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                            GlobalDialog = item_effect(fight_menu['btns'][i], dresseur.Player.team[0],'p')
+                                            if GlobalDialog == None:
+                                                GlobalDialog = ["**MESSAGE DE DEBUG**", "Objet inconnu, choisissez un autre item.", f"ID Item: {fight_menu['btns'][i]}"]
+                                                action = False
+                                                checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                                dresseur.Player.inv[fight_menu['btns'][i]] = 0
+                                            
+                                            indice = 0 # on simule pour pas casser la condition suivante
+                                            fight_tab(YELLOW)
 
-                    elif action == True: # si action == True
+
+                    elif action == True and GlobalDialog == []: # si action == True
                         # le checkup permet de se situer dans la boucle
 
                         # on vérifie si les pykemons ont encore des pp (cas de lutte)

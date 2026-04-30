@@ -25,6 +25,8 @@ class Creature:
         self.attack = attack
         self.defense = defense
         self.speed = speed
+        self.status = None
+        self.ball = 'pykeball'
         self.sprite = [s.copy() for s in sprite] # sprite est une liste [texture de face et de dos]
         self.moveset = moveset # liste contenant le moveset [m1, m2, m3, m4] un move est une clé définie dans le dictionnaire moves
         self.pps = []
@@ -36,8 +38,9 @@ class Creature:
         self.lvl = lvl
         self.xp = 0
         self.req_xp = req_xp
-        for i in range(len(self.sprite)):
-            self.sprite[i] = pygame.transform.scale(self.sprite[i],(self.sprite[i].get_width() * 5, self.sprite[i].get_height() * 5))
+        if map != 'ball': # map est un argument inutilisé, il sert ici à empêcher le sprite de regrossir après une capture de pykemon
+            for i in range(len(self.sprite)):
+                self.sprite[i] = pygame.transform.scale(self.sprite[i],(self.sprite[i].get_width() * 5, self.sprite[i].get_height() * 5))
 
     def lvlup(self):
         self.lvl += 1
@@ -58,8 +61,8 @@ class Creature:
             return assets.heal_snd
         
 
-    def copy(self):
-        creature = Creature(self.name, self.max_hp, self.attack, self.defense, self.sprite, self.moveset, self.type, self.lvl, self.req_xp, None, self.speed)
+    def copy(self, ball):
+        creature = Creature(self.name, self.max_hp, self.attack, self.defense, self.sprite, self.moveset, self.type, self.lvl, self.req_xp, 'ball', self.speed)
 
         creature.pps = copy.deepcopy(self.pps)
         creature.usable_mvs = copy.deepcopy(self.usable_mvs)
@@ -67,6 +70,8 @@ class Creature:
         creature.hp = copy.deepcopy(self.hp)
         creature.shiny = copy.deepcopy(self.shiny)
         creature.nick = copy.deepcopy(self.nick)
+        creature.status = copy.deepcopy(self.status)
+        creature.ball = ball
         return creature
 
 

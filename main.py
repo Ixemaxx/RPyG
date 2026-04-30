@@ -62,7 +62,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.5
+GameVersion = 0.55
 TabState = "Loading"
 
 cooldown = 0
@@ -116,7 +116,7 @@ action = False
 
 # vars balls
 
-ball = {'type': None, 'name': 'None', 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'caught': False, 'shakes': 0}
+ball = {'type': None, 'name': 'None', 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'caught': False, 'shakes': 0, 'pos':[-98,0]}
 
 # images combat
 
@@ -245,7 +245,6 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
         
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
             btn_list = [[dresseur.Player.team[i]] for i in range(6)] # on récupère les infos de l'équipe du joueur (None par défaut)
-            print(btn_list)
             btn_datas = [[(0,255,0),DARK_GREEN]]
 
             menu_color1 = DARK_GREEN # fenetre du fond et texte dans les boutons
@@ -312,7 +311,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
 
 
                 part = str(btn_list[i][0])
-                texte = font.render(part, True, WHITE)
+                texte = font.render(assets.traduction_part[part], True, WHITE)
 
 
                 btn_list[i].append(rect)
@@ -524,16 +523,28 @@ def item_effect(item, pykemon, origin):
     elif item == 'rappel_max' or item == 'guerison': # même action dans le code
         pykemon.hp = int(pykemon.max_hp)
         assets.heal_snd.play()
-        # pykemon.status = None
+        pykemon.status = None
         return [f"Vous utilisez une guérison sur {lanceur}" if item == 'guerison' else f"Vous utilisez un rappel max sur {lanceur}", "Il regagne toute sa vie"] 
     
     if item == 'total_soin':
-        # pykemon.status = None
+        pykemon.status = None
         assets.heal_snd.play()
         return [f"Vous utilisez un total soin sur {lanceur}", "Il n'a plus d'effet de status !'"]
 
     if item == 'pykeball':
-        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [200, HEIGHT], 'caught': False, 'shakes': 0}
+        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+
+    if item == 'superball':
+        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.65, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+    
+    if item == 'hyperball':
+        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.75, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+    
+    if item == 'masterball':
+        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 1, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
 
 
@@ -684,7 +695,7 @@ def main():
                             set_menu(1)
                         else:
                             if sous_menu > 1:
-                                sous_menu -= 1
+                                sous_menu = None
                             else:
                                 sous_menu = None
             else:
@@ -834,8 +845,10 @@ def main():
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
 
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
-                if not (ball['anim'] == 'shaking' and ball['throwing']):
+
+                if not ((ball['anim'] == 'shaking' and ball['throwing']) or (ball['pos'][0] > WIDTH * 0.759 and ball['throwing'])):
                     screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1)) 
+
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
                     # Si pykemons K.O
@@ -917,26 +930,34 @@ def main():
                                             indice = 0 # on simule pour pas casser la condition suivante
                                             fight_tab(YELLOW)
 
-                    if ball["throwing"] and GlobalDialog == []:
+                    if ball["throwing"]:
                         screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
-                        if ball['anim'] == 'throw' and cooldown <= 0:
-                            cooldown = 0.1
+                        if ball['anim'] == 'throw' and cooldown <= 0 and GlobalDialog == []:
+                            cooldown = 0.25
 
-                            if ball['frame'] < 8:
-                                ball['frame'] += 1
-                            else:
-                                ball['frame'] = 0
+                            
 
                             ball['sprite'] = assets.balls[ball['type']][ball['frame']]
 
-                            if ball['pos'][0] < WIDTH * 0.7:
-                                ball['pos'][0] += 35
-                                ball['pos'][1] -= 30
-                            else:
-                                ball['pos'][0] += 5
-                                ball['pos'][1] += 10
+                            if ball['pos'][0] < WIDTH * 0.76:
+                                if ball['frame'] < 0:
+                                    ball['frame'] = 8
+                                else:
+                                    ball['frame'] -= 1
 
-                                if ball['pos'][1] < HEIGHT * 0.25:
+
+                                ball['pos'][0] += 45
+                                ball['pos'][1] -= 17
+                                
+                            else:
+                                if ball['frame'] < 8:
+                                    ball['frame'] += 1
+                                else:
+                                    ball['frame'] = 0
+
+                                ball['pos'][1] += 7
+
+                                if ball['pos'][1] > HEIGHT * 0.28:
                                     ball['anim'] = 'shaking'
                                     ball['frame'] = 11
                                     ball['sprite'] = assets.balls[ball['type']][ball['frame']]
@@ -949,36 +970,39 @@ def main():
 
                         elif ball['anim'] == 'shaking' and cooldown <= 0:
                             cooldown = 1
-                            ball['pos'] = [WIDTH * 0.75, HEIGHT * 0.33]
+                            ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
 
-                            if ball['frame'] < 16:
+                            if ball['frame'] < 16 and ball['shakes'] > 0:
                                 ball['frame'] += 1
                             else:
-                                ball['frame'] = 12
-                                ball['shakes'] -= 1
+                                if ball['shakes'] > 0:
+                                    ball['frame'] = 12
+                                    ball['shakes'] -= 1
 
-                                if ball['shakes'] == 0:
+                                if ball['shakes'] <= 0 and ball['frame'] != 9:
                                     if ball['caught']:
+                                        ball['frame'] = 9
                                         action = False
                                         checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
                                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
-                                        GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp"]
+                                        GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp."]
                                         dresseur.Player.team[0].xp += exp
                                         while dresseur.Player.team[0].xp > dresseur.Player.team[0].req_xp:
                                             dresseur.Player.team[0].lvlup()
                                         InTeam = False
-                                        print(dresseur.Player.encounter, dresseur.Player.team[0])
+                                        print("InTeam False")
                                         for i in range(len(dresseur.Player.team)):
                                             if dresseur.Player.team[i] == None and not InTeam:
-                                                print("trouvé !!!!")
-                                                dresseur.Player.team[i] = dresseur.Player.encounter.copy()
+                                                dresseur.Player.team[i] = dresseur.Player.encounter.copy(ball['type'])
                                                 InTeam = True
-                                                print(dresseur.Player.team[i], print(dresseur.Player.team))
+
+                                        if not InTeam: # Si attrapé mais pas de place dans l'équipe
+                                            GlobalDialog = ["Vous n'avez plus de place dans votre", "équipe. Le Pykemon à été transféré", "dans vos boites."]
                                         pygame.mixer.stop()
 
                                     else:
                                         ball['frame'] = 10
-                                        GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}"]
+                                        GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}..."]
                                         ball["throwing"] = False
 
                             ball['sprite'] = assets.balls[ball['type']][ball['frame']]

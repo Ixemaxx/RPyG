@@ -20,19 +20,28 @@ balls = {}
 def get_ball(col, name):
     ball_frames = []
     grid_size = 17
-    # On s'assure que case_size est un entier pour Pygame
-    case_size = balls_tex.get_width() / grid_size
+    tex_width = balls_tex.get_width()
+    tex_height = balls_tex.get_height()
 
-    # On calcule la position X une seule fois (colonne * taille d'une case)
-    pos_x = col * case_size
+    # Utilisation de la division entière pour éviter les flottants
+    case_w = tex_width // grid_size
+    case_h = tex_height // grid_size
+
+    pos_x = col * case_w
 
     for y in range(grid_size):
-        # Rect(x_depart, y_depart, largeur, hauteur)
-        rect = pygame.Rect(pos_x, y * case_size, case_size, case_size)
+        # On calcule pos_y précisément
+        pos_y = y * case_h
         
-        # subsurface extrait la zone, scale la redimensionne
-        frame = balls_tex.subsurface(rect)
-        ball_frames.append(pygame.transform.scale(frame, (98, 98)))
+        # Sécurité pour ne pas dépasser d'un pixel à cause des arrondis
+        rect = pygame.Rect(pos_x, pos_y, case_w, case_h)
+        
+        try:
+            frame = balls_tex.subsurface(rect)
+            ball_frames.append(pygame.transform.scale(frame, (98, 98)))
+        except ValueError:
+            # Au cas où le rectangle dépasse de l'image source
+            print(f"Erreur de découpe à l'index y={y}")
 
     balls[name] = ball_frames
 
@@ -79,6 +88,4 @@ inventory = {
     # unique
     "dex": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'PyKedex', 'desc': ["Un genre d'appareil photo made in", "China qui enregistre les infos", "des PyKemons attrapés"]}
 }
-
-
 

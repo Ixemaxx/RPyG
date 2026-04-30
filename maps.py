@@ -20,6 +20,7 @@ rotation = [0, 90, 180, 270] # rotation en degrés à appliquer
 
 SectionName = {"lil_garden": "Route 1", "lil_house": "Ma Maison"}
 
+
 def tilemap_manager():
     global tilemap, sprite_sheet
 
@@ -66,6 +67,7 @@ def change_map(new_map,new_name):
 
 def get_tile(tile): #récupérer une tile dans la tilemap (liste)
     return tilemap[tile]
+
 
 lil_garden = [[67, 67, 67, 67, 67, 67, 67, 257, 67, 67, 67, 67 , 130, 130, 130, 130],\
              [130, 130, 130, 130, 130, 130, 130, 257, 130, 130, 130, 130 , 23, 24, 25, 0],\

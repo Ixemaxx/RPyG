@@ -90,6 +90,8 @@ inventory = {
     "total_soin": {'type': 'heals', 'tex': get_item(5, 2), 'alias': 'Total Soin', 'desc': ["De la morphine, pour faire", "oublier à vos pykemons", "qu'ils sont brûlés, gelés", "endormis, paralysés...", "Espèce de monstre."]},
     "guerison": {'type': 'heals', 'tex': get_item(1, 2), 'alias': 'Guérison', 'desc': ["De la magie noire en flacon","je vois que ça.","Redonne tous les pvs."]},
     # unique
-    "dex": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'PyKedex', 'desc': ["Un genre d'appareil photo made in", "China qui enregistre les infos", "des PyKemons attrapés"]}
+    "dex": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'PyKedex', 'desc': ["Un genre d'appareil photo made in", "China qui enregistre les infos", "des PyKemons attrapés"]},
+    "bike": {'type': 'unique', 'tex': get_item(3, 27), 'alias': 'Vélo', 'desc': ["Un vélo Décathlon premier prix", "que vous avez eu pour vos 8 ans.", "Malgré son usure globale, la sonette", "marche encore;"]}
+    
 }
 

@@ -62,7 +62,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.55
+GameVersion = 0.6
 TabState = "Loading"
 
 cooldown = 0
@@ -342,12 +342,10 @@ def pack_map():
 def get_dialog():
     global l1, l2, l3, curr_char, curr_line, IsDialogStarted, dialog, max_diag_lines, max_line_chars, dialog_cooldown, GlobalDialog, IntroDone, end_cooldown
 
-    if not dialog == "done" and dresseur.Player.interact != "dialog_end": # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
+    if not dialog == "done" and not dresseur.Player.dialog_end: # si le dialogue n'est pas fini et si le joueur n'a pas la possibilité de fermer le dialogue
 
         if not IsDialogStarted:
             IsDialogStarted = True
-            if GlobalDialog == []: # si c'est un dialogue du joueur (pas en combat, par ex)
-                dresseur.Player.interact = None
             curr_char = 0
             curr_line = 0 # 0 ou 1 (ligne 1 ou 2)
             l1, l2, l3 = "", "", ""
@@ -371,7 +369,7 @@ def get_dialog():
                 else:
                     dialog = "done" # état spécial pour déterminer la fin de la boucle
                     if GlobalDialog == []:
-                        dresseur.Player.interact = "dialog_end"
+                        dresseur.Player.dialog_end = True
                         IsDialogStarted = False
             
         if dialog != "done":        
@@ -401,7 +399,7 @@ def get_dialog():
 def fight_tab(tab):
     global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, stats_ui # blue=fuir, green=pkms, yellow=sac, red=atk
 
-    p_ratio = dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp
+    p_ratio = dresseur.Player.curr_creature.hp / dresseur.Player.curr_creature.max_hp
     adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
 
     if p_ratio > 0.5:
@@ -424,20 +422,20 @@ def fight_tab(tab):
     stats_ui.blit(pbar, (0, HEIGHT * 0.45))
     stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].hp} / {dresseur.Player.team[0].max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.hp} / {dresseur.Player.curr_creature.max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
     stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.team[0].name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
 
     stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
     stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
 
-    stats_ui.blit(lvlfont.render(f"{dresseur.Player.team[0].lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
+    stats_ui.blit(lvlfont.render(f"{dresseur.Player.curr_creature.lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
     stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
 
     pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
-    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.team[0].hp / dresseur.Player.team[0].max_hp), 8)) # barre de vie joueur
+    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.curr_creature.hp / dresseur.Player.curr_creature.max_hp), 8)) # barre de vie joueur
 
 
 
@@ -452,12 +450,12 @@ def fight_tab(tab):
     elif tab == RED:
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
         fight_menu = {"rect": rect,
-                      "btns": [dresseur.Player.team[0].moveset[i] for i in range(len(dresseur.Player.team[0].moveset))],
+                      "btns": [dresseur.Player.curr_creature.moveset[i] for i in range(len(dresseur.Player.curr_creature.moveset))],
                       "title": font.render("Attaques", True, WHITE),
                       "color": RED,
-                      "btns-text": [pykfont.render(dresseur.Player.team[0].moveset[j][0], True, WHITE if dresseur.Player.team[0].pps[j] > 0 else RED) for j in range(len(dresseur.Player.team[0].moveset))],
+                      "btns-text": [pykfont.render(dresseur.Player.curr_creature.moveset[j][0], True, WHITE if dresseur.Player.curr_creature.pps[j] > 0 else RED) for j in range(len(dresseur.Player.curr_creature.moveset))],
                       #DMG, PP, Precision, type
-                      "subtext": [pykfont.render(f" {dresseur.Player.team[0].pps[k]} / {dresseur.Player.team[0].moveset[k][2]} PP", True, WHITE if dresseur.Player.team[0].pps[k] > 0 else RED) for k in range(len(dresseur.Player.team[0].moveset))], 
+                      "subtext": [pykfont.render(f" {dresseur.Player.curr_creature.pps[k]} / {dresseur.Player.curr_creature.moveset[k][2]} PP", True, WHITE if dresseur.Player.curr_creature.pps[k] > 0 else RED) for k in range(len(dresseur.Player.curr_creature.moveset))], 
                       "type": "fight",
                       'bag_type': None}
         
@@ -553,11 +551,11 @@ def fight_round(prefix_l, canPlay, checkup, choice):
 
     # prefix_lanceur / cible
     if prefix_l == 'p':
-        lanceur = dresseur.Player.team[0]
+        lanceur = dresseur.Player.curr_creature
         cible = dresseur.Player.encounter
     else:
         lanceur = dresseur.Player.encounter
-        cible = dresseur.Player.team[0]
+        cible = dresseur.Player.curr_creature
 
     
     # si le lanceur peut jouer (pps restants sur au moins 1 capacité)
@@ -607,12 +605,13 @@ def main():
     dresseur.Player.team[0] = pkmns.base_copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
     for i in range(dresseur.Player.team[0].lvl - 1):
         dresseur.Player.team[0].lvlup()
+    dresseur.Player.curr_creature = dresseur.Player.team[0]
 
     while running:
         keys = pygame.key.get_pressed()
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
-        if keys[pygame.K_x] and cooldown <= 0 and phase == "game":
+        if keys[pygame.K_x] and cooldown <= 0 and phase == "game" and dresseur.Player.able:
             cooldown = 1
             if menu == "None":
                 set_menu(1)
@@ -675,6 +674,7 @@ def main():
                 pass
                 
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
+                
             
 
 
@@ -844,7 +844,7 @@ def main():
 
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
 
-                screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
+                screen.blit(dresseur.Player.curr_creature.sprite[1], (WIDTH // 8, HEIGHT * 0.5))
 
                 if not ((ball['anim'] == 'shaking' and ball['throwing']) or (ball['pos'][0] > WIDTH * 0.759 and ball['throwing'])):
                     screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1)) 
@@ -852,17 +852,17 @@ def main():
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
                     # Si pykemons K.O
-                    if dresseur.Player.team[0].hp <= 0 and not fuite and GlobalDialog == []:
+                    if dresseur.Player.curr_creature.hp <= 0 and not fuite and GlobalDialog == []:
                         GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
                         fuite = True
                         action = False
 
                     if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
-                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
+                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
                         GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
-                        dresseur.Player.team[0].xp += exp
-                        while dresseur.Player.team[0].xp > dresseur.Player.team[0].req_xp:
-                            dresseur.Player.team[0].lvlup()
+                        dresseur.Player.curr_creature.xp += exp
+                        while dresseur.Player.curr_creature.xp > dresseur.Player.curr_creature.req_xp:
+                            dresseur.Player.curr_creature.lvlup()
 
                         fuite = True
                         action = False
@@ -919,7 +919,7 @@ def main():
                                             dresseur.Player.inv[fight_menu['btns'][i]] -= 1
                                             action = True
                                             checkup = {"p_atk": True, "adv_atk": False, "p_pp": False, "adv_pp": False}
-                                            GlobalDialog = item_effect(fight_menu['btns'][i], dresseur.Player.team[0],'p')
+                                            GlobalDialog = item_effect(fight_menu['btns'][i], dresseur.Player.curr_creature,'p')
                                             if GlobalDialog == None:
                                                 GlobalDialog = ["**MESSAGE DE DEBUG**", "Objet inconnu, choisissez un autre item.", f"ID Item: {fight_menu['btns'][i]}"]
                                                 action = False
@@ -990,13 +990,12 @@ def main():
                                         assets.caught_snd.play()
                                         action = False
                                         checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
-                                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
+                                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
                                         GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp."]
-                                        dresseur.Player.team[0].xp += exp
-                                        while dresseur.Player.team[0].xp > dresseur.Player.team[0].req_xp:
-                                            dresseur.Player.team[0].lvlup()
+                                        dresseur.Player.curr_creature.xp += exp
+                                        while dresseur.Player.curr_creature.xp > dresseur.Player.curr_creature.req_xp:
+                                            dresseur.Player.curr_creature.lvlup()
                                         InTeam = False
-                                        print("InTeam False")
                                         for i in range(len(dresseur.Player.team)):
                                             if dresseur.Player.team[i] == None and not InTeam:
                                                 dresseur.Player.team[i] = dresseur.Player.encounter.copy(ball['type'])
@@ -1024,7 +1023,7 @@ def main():
 
                         # on vérifie si les pykemons ont encore des pp (cas de lutte)
                         PcanPlay = False
-                        for pp in dresseur.Player.team[0].pps:
+                        for pp in dresseur.Player.curr_creature.pps:
                             if pp != 0:
                                 PcanPlay = True
 
@@ -1035,9 +1034,9 @@ def main():
 
                         AdvChoice = random.randint(0, len(dresseur.Player.encounter.moveset) - 1)
 
-                        if (dresseur.Player.team[0].pps[indice] > 0 or not PcanPlay) or checkup["p_atk"] == True: # PP joueur > 0 mais pas incapable d'attaquer
+                        if (dresseur.Player.curr_creature.pps[indice] > 0 or not PcanPlay) or checkup["p_atk"] == True: # PP joueur > 0 mais pas incapable d'attaquer
                             
-                            if dresseur.Player.team[0].speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
+                            if dresseur.Player.curr_creature.speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
 
                                 if checkup["p_atk"] == False:
                                     checkup = fight_round("p", PcanPlay, checkup, indice)
@@ -1098,7 +1097,7 @@ def main():
                 screen.blit(dia_font.render(l2, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.83))
                 screen.blit(dia_font.render(l3, True, WHITE), (WIDTH * 0.31, HEIGHT * 0.89))
                 if GlobalDialog == [] :
-                    if dresseur.Player.interact == "dialog_end":
+                    if dresseur.Player.dialog_end:
                         screen.blit(font.render("...", True, WHITE), (WIDTH * 0.70, HEIGHT * 0.89))
             
 

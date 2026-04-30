@@ -17,8 +17,7 @@ ORANGE = (251, 161, 43)
 DARK_ORANGE = (251, 133, 43)
 DARK_RED = (166, 23, 23)
 
-keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e}
-speed = 300
+keymap = {"left": pygame.K_q, "right": pygame.K_d, "up": pygame.K_z, "down": pygame.K_s, "e": pygame.K_e, "a": pygame.K_a}
 
 allowed_tile = [0,1,5,70,102, 256, 257, 258, 259, 260, 261, 262, 263] # id de cases où le joueur peut marcher (pas de collisions)
 special_tile = [2,3,5,70] # cases spéciales (bancs, hautes herbes)
@@ -46,12 +45,13 @@ class Dresseur(pygame.sprite.Sprite):
 
         super().__init__()
 
-        self.sprite_sheet = pygame.transform.scale(sprite_sheet, (100,100)) #alpha pour retirer le fond blanc
+        self.sprite_sheet = pygame.transform.scale(sprite_sheet, (100,100)).convert_alpha() #alpha pour retirer le fond blanc
         self.sprite = sprite_sheet #provisoire, le temps d'appeler get_sprite()
         self.username = username
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
         self.team = [None for i in range(6)]
+        self.speed = 300
         self.inv = {"pykeball": 10,
                      "superball": 5,
                      "hyperball": 3,
@@ -63,10 +63,13 @@ class Dresseur(pygame.sprite.Sprite):
                      "rappel_max": 1,
                      "total_soin": 2,
                      #uniques
-                     "dex": 1}
+                     "dex": 1,
+                     "bike": 1}
+                     
         #animations
+        self.ride = False # Etat du velo
         self.anim = ""
-        self.curr_creature = None #creature actuelle en combat
+        self.curr_creature = self.team[0] #creature actuelle en combat
         self.frames = 1 #nb de frames de l'anim
         self.curr_frame = 0 
         self.dir = dir #direction du sprite
@@ -82,6 +85,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.dialog = [] # liste qui contient les infos du dialogue en cours
         self.encounter = None
         self.snd_cooldown = 1
+        self.dialog_end = False
         #self.hitbox_r = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
         #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
         #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
@@ -97,6 +101,7 @@ class Dresseur(pygame.sprite.Sprite):
         width = self.sprite_sheet.get_width()
 
     def extract_anim(self):
+        self.anim_list = []  # on reset pour les changements de sprite_sheet à la volée
 
         for i in range(12):
             rect = pygame.Rect((i % 3) * (width // 3), (i // 3) * (width // 4), width // 3, width // 4)
@@ -246,9 +251,6 @@ class Dresseur(pygame.sprite.Sprite):
                 if random.randint(1, 1000) > 990:
                     self.encounter = "get" # on attend que la boucle main lance le combat maintenant
 
-        elif self.dialog != []:
-            self.able = True
-            self.dialog = []
         else:
             if self.state == "banc":
                 self.y += 30
@@ -262,10 +264,47 @@ class Dresseur(pygame.sprite.Sprite):
             if self.state == "banc":
                 self.able = False
 
+    def get_player_status(self): # vitesse et spritesheet du joueur
+        speed = 230 # vitesse de base
+
+        # on vérifie l'aniamtion à appliquer sans que le joueur ait à bouger
+        if self.moving:
+            id = f"walk_{self.dir}"
+        else:
+            id = f"idle_{self.dir}"
+
+        # condition spéciale de l'herbe
+        try: # au début c'est en None donc ça marchera pas
+            if self.interact[0] == 'grass': # on marche sur l'herbe
+                speed = 215
+                self.ride = False
+                if self.sprite_sheet != grass_player_sheet:
+                    self.sprite_sheet = grass_player_sheet
+                    self.extract_anim()  
+                    self.animate_dresseur(id)       
+        except:
+            pass
+
+        # à vélo
+        if self.ride:
+            speed = 340
+            if self.sprite_sheet != bike_player_sheet:
+                self.sprite_sheet = bike_player_sheet
+                self.extract_anim()
+                self.animate_dresseur(id)
+        
+        # condition normale (à pied)
+        elif speed == 230: # si on est plus dans l'herbe
+            if self.sprite_sheet != player_sheet:
+                self.sprite_sheet = player_sheet
+                self.extract_anim()
+                self.animate_dresseur(id)
+        
+        self.speed = speed
+
         
 
     def update(self, keys, dt, map, entities):
-        global speed
 
         dx, dy = 0, 0
         if self.cooldown >= 0:
@@ -274,24 +313,25 @@ class Dresseur(pygame.sprite.Sprite):
         if self.able:
             if keys != 0:
                 if keys[keymap["left"]]:
-                    dx -= speed * dt
+                    dx -= self.speed * dt
                     self.dir = "l"
 
                 if keys[keymap["right"]]:
-                    dx += speed * dt
+                    dx += self.speed * dt
                     self.dir = 'r'
 
                 if keys[keymap["up"]]:
-                    dy -= speed * dt
+                    dy -= self.speed * dt
                     self.dir = 'u'
 
                 if keys[keymap["down"]]:
-                    dy += speed * dt
+                    dy += self.speed * dt
                     self.dir = 'd'
 
 
         if dx != 0 or dy != 0: #définit si le joueur bouge ou pas
             self.moving = True
+            self.get_player_status() # on vérifie la vitesse et la sprite_sheet à appliquer
             if dx != 0 and dy != 0: #si on se déplace en diagonale, on réduit la vitesse pour éviter d'aller plus vite
                 if self.IsFuturePosAllowed(dx, dy, maps.map, entities):
                     if self.updatebox:
@@ -321,13 +361,32 @@ class Dresseur(pygame.sprite.Sprite):
         
         if keys != 0 and self.cooldown <= 0:
             if keys[keymap["e"]]: # à part, ça permet d'interagir avec des pnj, des boites de dia(l)ogue...
-                if self.interact != None:
+                if self.interact != None and self.dialog == []:
                     self.get_interaction()
+                elif self.dialog_end:
+                    self.cooldown = 2.5
+                    self.able = True
+                    self.dialog = []
+                    self.dialog_end = False
+            if keys[keymap["a"]] and self.able and 'bike' in self.inv: # si on peut bouger, 
+                self.cooldown = 2.5
+                if self.ride == False:
+                    self.ride = True
+                else:
+                    self.ride = False
+
+                self.get_player_status()
+
+                
 
 
 
             
 
 # Création des deux personnages
-Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/0.png").convert_alpha(), (100,100)), username="Ixemax") 
+Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(), (100,100)), username="Ixemax") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)
+
+grass_player_sheet = pygame.transform.scale(pygame.image.load("sprites/persos/player_grass.png").convert_alpha(), (100,100))
+player_sheet = pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(), (100,100))
+bike_player_sheet = pygame.transform.scale(pygame.image.load("sprites/persos/player_bike.png").convert_alpha(), (100,100))

@@ -6,6 +6,7 @@ import entity_manager as entity_mgr
 import creatures as pkmns
 import random
 import assets
+import copy
 
 # Initialisation de Pygame
 pygame.init()
@@ -61,7 +62,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.4
+GameVersion = 0.5
 TabState = "Loading"
 
 cooldown = 0
@@ -113,6 +114,10 @@ fight_bg = fight_intro[0]
 frame = 0
 action = False
 
+# vars balls
+
+ball = {'type': None, 'name': 'None', 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'caught': False, 'shakes': 0}
+
 # images combat
 
 pbar = pygame.image.load("sprites/battle/hp_player.png").convert_alpha()
@@ -136,7 +141,7 @@ pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}
 
 # CHANGEMENT DE PHASE
 
-def set_phase(new_phase, opponent=None):
+def set_phase(new_phase, encounter=None):
     global phase, bg_color, TabState, intro, frame, IntroDone
 
     phase = new_phase
@@ -150,7 +155,7 @@ def set_phase(new_phase, opponent=None):
         IntroDone = False
         intro = True
         frame = 0
-        dresseur.Player.encounter = opponent
+        dresseur.Player.encounter = encounter
         TabState = f"Combat contre..."
         pygame.mixer.music.stop()
         assets.wild_snd.play()
@@ -240,6 +245,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
         
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
             btn_list = [[dresseur.Player.team[i]] for i in range(6)] # on récupère les infos de l'équipe du joueur (None par défaut)
+            print(btn_list)
             btn_datas = [[(0,255,0),DARK_GREEN]]
 
             menu_color1 = DARK_GREEN # fenetre du fond et texte dans les boutons
@@ -495,6 +501,7 @@ def fight_tab(tab):
         fight_color = fight_menu["color"]
 
 def item_effect(item, pykemon, origin):
+    global ball, GlobalDialog
 
     if origin == "p":
         lanceur = f"Votre {pykemon.name}"
@@ -524,6 +531,10 @@ def item_effect(item, pykemon, origin):
         # pykemon.status = None
         assets.heal_snd.play()
         return [f"Vous utilisez un total soin sur {lanceur}", "Il n'a plus d'effet de status !'"]
+
+    if item == 'pykeball':
+        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [200, HEIGHT], 'caught': False, 'shakes': 0}
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
 
 
 def fight_round(prefix_l, canPlay, checkup, choice):
@@ -565,7 +576,7 @@ def fight_round(prefix_l, canPlay, checkup, choice):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball
 
     clock = pygame.time.Clock()
     running = True
@@ -582,7 +593,7 @@ def main():
     TabState = maps.map_id
     pack_map()
 
-    dresseur.Player.team[0] = pkmns.copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
+    dresseur.Player.team[0] = pkmns.base_copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
     for i in range(dresseur.Player.team[0].lvl - 1):
         dresseur.Player.team[0].lvlup()
 
@@ -637,7 +648,7 @@ def main():
             if dresseur.Player.encounter == "get":
                 for entity in entity_mgr.entities:
                     if entity.type == "grass" and entity.map == maps.map_id:
-                        set_phase("fight", opponent=entity.get_creature())
+                        set_phase("fight", encounter=entity.get_creature())
                         fight_tab(RED)
 
             #for entity in entity_mgr.entities:
@@ -812,7 +823,8 @@ def main():
             screen.blit(fight_bg,(0,0))
 
 
-            if fuite and GlobalDialog == []:
+            if (fuite or (ball['caught'] and not action)) and GlobalDialog == []:
+                ball = {'type': 'none', 'name': 'none', 'throwing': False, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': 'none', 'pos': [200, HEIGHT], 'caught': False, 'shakes': 0}
                 fuite = False
                 pygame.mixer.stop()
                 pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
@@ -822,7 +834,8 @@ def main():
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
 
                 screen.blit(dresseur.Player.team[0].sprite[1], (WIDTH // 8, HEIGHT * 0.5))
-                screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1))
+                if not (ball['anim'] == 'shaking' and ball['throwing']):
+                    screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1)) 
                 if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
                     # Si pykemons K.O
@@ -840,12 +853,13 @@ def main():
 
                         fuite = True
                         action = False
+                        
 
                     # barres d'hp
                     # pour optimiser: fusionner toutes les infos des barres en une surface
                     screen.blit(stats_ui, (0,0))
 
-                    if not action and not fuite: # on cache l'interface
+                    if not action and not fuite and GlobalDialog == []: # on cache l'interface
                         # boutons de jeu
                         for element in fight_ui:
                             rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
@@ -880,7 +894,7 @@ def main():
                                 screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
                                 #screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
 
-                                if btn.collidepoint(mouse_pos) and mouse_click and not action and GlobalDialog == [] and cooldown <= 0:
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action and GlobalDialog == [] and cooldown <= 0 and not ball["throwing"]:
                                     cooldown = 1
                                     if fight_menu['bag_type'] == None:
                                         fight_menu['bag_type'] = fight_menu['btns'][i]
@@ -898,12 +912,84 @@ def main():
                                                 action = False
                                                 checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
                                                 dresseur.Player.inv[fight_menu['btns'][i]] = 0
+
                                             
                                             indice = 0 # on simule pour pas casser la condition suivante
                                             fight_tab(YELLOW)
 
+                    if ball["throwing"] and GlobalDialog == []:
+                        screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
+                        if ball['anim'] == 'throw' and cooldown <= 0:
+                            cooldown = 0.1
 
-                    elif action == True and GlobalDialog == []: # si action == True
+                            if ball['frame'] < 8:
+                                ball['frame'] += 1
+                            else:
+                                ball['frame'] = 0
+
+                            ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+
+                            if ball['pos'][0] < WIDTH * 0.7:
+                                ball['pos'][0] += 35
+                                ball['pos'][1] -= 30
+                            else:
+                                ball['pos'][0] += 5
+                                ball['pos'][1] += 10
+
+                                if ball['pos'][1] < HEIGHT * 0.25:
+                                    ball['anim'] = 'shaking'
+                                    ball['frame'] = 11
+                                    ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+                                    if random.randint(0,100) < ball['catch_rate'] * 100:
+                                        ball['shakes'] = 3
+                                        ball['caught'] = True
+                                    else:
+                                        ball['shakes'] = random.randint(1,2)
+                                        ball['caught'] = False
+
+                        elif ball['anim'] == 'shaking' and cooldown <= 0:
+                            cooldown = 1
+                            ball['pos'] = [WIDTH * 0.75, HEIGHT * 0.33]
+
+                            if ball['frame'] < 16:
+                                ball['frame'] += 1
+                            else:
+                                ball['frame'] = 12
+                                ball['shakes'] -= 1
+
+                                if ball['shakes'] == 0:
+                                    if ball['caught']:
+                                        action = False
+                                        checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)
+                                        GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp"]
+                                        dresseur.Player.team[0].xp += exp
+                                        while dresseur.Player.team[0].xp > dresseur.Player.team[0].req_xp:
+                                            dresseur.Player.team[0].lvlup()
+                                        InTeam = False
+                                        print(dresseur.Player.encounter, dresseur.Player.team[0])
+                                        for i in range(len(dresseur.Player.team)):
+                                            if dresseur.Player.team[i] == None and not InTeam:
+                                                print("trouvé !!!!")
+                                                dresseur.Player.team[i] = dresseur.Player.encounter.copy()
+                                                InTeam = True
+                                                print(dresseur.Player.team[i], print(dresseur.Player.team))
+                                        pygame.mixer.stop()
+
+                                    else:
+                                        ball['frame'] = 10
+                                        GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}"]
+                                        ball["throwing"] = False
+
+                            ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+
+
+                                        
+
+
+
+
+                    elif action == True and GlobalDialog == [] and not ball['throwing']: # si action == True
                         # le checkup permet de se situer dans la boucle
 
                         # on vérifie si les pykemons ont encore des pp (cas de lutte)

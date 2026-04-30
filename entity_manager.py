@@ -63,7 +63,7 @@ class Entity(pygame.sprite.Sprite):
             self.hitbox = pygame.Rect(self.x, self.y, self.w, self.h) # hitbox de la warp zone, à ajuster selon les besoins
 
     def get_creature(self):
-        creature = pkmns.copy(random.choice(self.creatures))
+        creature = pkmns.base_copy(random.choice(self.creatures))
         creature.lvl = random.randint(self.levels[0], self.levels[1])
         for i in range(creature.lvl - 1):
             creature.lvlup()

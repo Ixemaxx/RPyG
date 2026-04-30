@@ -1,6 +1,7 @@
 import pygame
 import random
 import assets
+import copy
 
 pygame.mixer.init()
 pygame.display.set_mode((1920, 1080))
@@ -18,6 +19,8 @@ class Creature:
     def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map, speed):
         self.name = name
         self.hp = hp # pour ajouter un peu de variété dans les stats des créatures 
+        self.shiny = random.randint(0,3)
+        self.nick = copy.deepcopy(self.name)
         self.max_hp = hp
         self.attack = attack
         self.defense = defense
@@ -53,6 +56,19 @@ class Creature:
             return assets.atk2_snd
         if snd == "heal":
             return assets.heal_snd
+        
+
+    def copy(self):
+        creature = Creature(self.name, self.max_hp, self.attack, self.defense, self.sprite, self.moveset, self.type, self.lvl, self.req_xp, None, self.speed)
+
+        creature.pps = copy.deepcopy(self.pps)
+        creature.usable_mvs = copy.deepcopy(self.usable_mvs)
+        creature.xp = copy.deepcopy(self.xp)
+        creature.hp = copy.deepcopy(self.hp)
+        creature.shiny = copy.deepcopy(self.shiny)
+        creature.nick = copy.deepcopy(self.nick)
+        return creature
+
 
 
     def atk(self, move, opponent, origin):
@@ -131,7 +147,7 @@ class Creature:
         return 1
 
 
-def copy(creature_name):
+def base_copy(creature_name):
     if creature_name in bookmark:
         params = bookmark[creature_name]
         # On déballe la liste avec *params

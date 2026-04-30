@@ -8,6 +8,12 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "stopOnEntry": false
+        },
+        {
+            "name": "Python Debugger: Python File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}"
         }
     ]
 }

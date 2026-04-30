@@ -10,6 +10,10 @@ wild_snd = pygame.mixer.Sound("sounds/wild.mp3")
 atk_snd = pygame.mixer.Sound("sounds/atk.mp3")
 atk2_snd = pygame.mixer.Sound("sounds/atk2.mp3")
 heal_snd = pygame.mixer.Sound("sounds/heal.mp3")
+throw_snd = pygame.mixer.Sound("sounds/throw.mp3")
+shaking_snd = pygame.mixer.Sound("sounds/ball1.mp3")
+caught_snd = pygame.mixer.Sound("sounds/caught.mp3")
+warp_snd = pygame.mixer.Sound("sounds/door.mp3")
 
 
 # génération des animations de balls

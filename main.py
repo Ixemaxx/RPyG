@@ -935,6 +935,8 @@ def main():
                         if ball['anim'] == 'throw' and cooldown <= 0 and GlobalDialog == []:
                             cooldown = 0.25
 
+                            if ball['pos'][0] == -98: # position de départ, joué une fois donc
+                                assets.throw_snd.play()
                             
 
                             ball['sprite'] = assets.balls[ball['type']][ball['frame']]
@@ -972,16 +974,20 @@ def main():
                             cooldown = 1
                             ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
 
+                            if ball['frame'] == 14:
+                                assets.shaking_snd.play()
+
                             if ball['frame'] < 16 and ball['shakes'] > 0:
                                 ball['frame'] += 1
                             else:
                                 if ball['shakes'] > 0:
-                                    ball['frame'] = 12
+                                    ball['frame'] = 11
                                     ball['shakes'] -= 1
 
                                 if ball['shakes'] <= 0 and ball['frame'] != 9:
                                     if ball['caught']:
                                         ball['frame'] = 9
+                                        assets.caught_snd.play()
                                         action = False
                                         checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
                                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.team[0].lvl, 1) * random.randint(20, 30)

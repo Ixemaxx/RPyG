@@ -22,6 +22,7 @@ class Creature:
         self.shiny = random.randint(0,3)
         self.nick = copy.deepcopy(self.name)
         self.max_hp = hp
+        self.before_hp = hp # utilisé pour faire l'effet d'animation de la barre de vie
         self.attack = attack
         self.defense = defense
         self.speed = speed
@@ -44,13 +45,14 @@ class Creature:
 
     def lvlup(self):
         self.lvl += 1
-        self.xp = 0
+        self.xp = max(self.xp - self.req_xp, 0)
         self.max_hp += 2
         self.hp += 2
         self.req_xp *= 1.2
         self.attack += 2
         self.defense += 2
         self.speed += 2
+        self.before_hp = self.hp
 
     def get_sound(self, snd):
         if snd == "atk":
@@ -79,6 +81,9 @@ class Creature:
     def atk(self, move, opponent, origin):
         precision = moves[move][3]
         efficacite = self.efficacite(move, opponent.type) # renvoie None si inneficace, sinon renvoie un coeff multiplicateur de dégâts
+
+        self.before_hp = copy.deepcopy(self.hp)
+        opponent.before_hp = copy.deepcopy(opponent.hp)
 
         # on vérifie que le move est pas épuisé en PPs chez le bot (il pick au hasard puis par élimination)
         if origin == "adv" and move != "lutte": # lutte n'est pas un move du pykemon, ça foutrait en l'air ce bout de code de le vérifier
@@ -119,6 +124,7 @@ class Creature:
             self.hp = int(max(0, self.hp - self.max_hp /4))
             opponent.hp = round(max(opponent.hp - (((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite, 0))
             assets.atk_snd.play()
+            
             return [lanceur, "Il se blesse dans son attaque."]
 
 
@@ -128,16 +134,21 @@ class Creature:
         else:
             if efficacite > 1:
                 msg = [lanceur, f"C'est super efficace sur {cible}"]
+                snd = assets.super_eff_snd
+
             elif efficacite == 0.5:
                 msg = [lanceur, f"Ce n'est pas très efficace sur {cible}"]
+                snd = assets.not_eff_snd
             else:
                 msg = [lanceur, f"C'est efficace sur {cible}"]
+                snd = assets.effective_snd
 
             # précision de l'attaque
             if precision > random.randint(0,100): # attaque réussie
                 opponent.hp = int(round(max(opponent.hp - (((((opponent.lvl * 0.4 + 2) * self.attack * moves[move][1])/opponent.defense) / 50) + 2) * efficacite, 0))) # vraie formule de pokemon
                 
                 self.get_sound(moves[move][6]).play()
+                snd.play()
                 return msg
             else: # attaque esquivée
                 return [lanceur, cible, "a esquivé l'Attaque !"]

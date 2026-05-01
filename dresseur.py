@@ -55,7 +55,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.inv = {"pykeball": 10,
                      "superball": 5,
                      "hyperball": 3,
-                     "masterball": 1,
+                     "masterball": 10,
                      #soins
                      "potion": 5, 
                      "guerison": 1,
@@ -223,6 +223,7 @@ class Dresseur(pygame.sprite.Sprite):
 
         if self.able and self.dialog == []:
             if type == "npc":
+                assets.dialog_snd.play()
                 interact.npc.animate_dresseur(f"idle_{interact.npc.dir}")
                 self.dialog = [interact.dialog, interact.action, interact.npc.username]
                 interact.make_action()
@@ -369,10 +370,12 @@ class Dresseur(pygame.sprite.Sprite):
                     self.able = True
                     self.dialog = []
                     self.dialog_end = False
+                    assets.dialog_snd.play()
             if keys[keymap["a"]] and self.able and 'bike' in self.inv: # si on peut bouger, 
                 self.cooldown = 2.5
                 if self.ride == False:
                     self.ride = True
+                    assets.bicycle_snd.play()
                 else:
                     self.ride = False
 

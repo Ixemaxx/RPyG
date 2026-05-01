@@ -12,6 +12,7 @@ import copy
 pygame.init()
 pygame.mixer.init()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+pygame.mixer.music.set_volume(0.75)
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -62,7 +63,7 @@ fuite = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.6
+GameVersion = 0.65
 TabState = "Loading"
 
 cooldown = 0
@@ -113,6 +114,7 @@ for i in range(8): # animation de lancement de combat
 fight_bg = fight_intro[0]
 frame = 0
 action = False
+hp_cooldown = 0
 
 # vars balls
 
@@ -397,16 +399,19 @@ def get_dialog():
             dialog_cooldown = dialog_speed * 0.5
     
 def fight_tab(tab):
-    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, stats_ui # blue=fuir, green=pkms, yellow=sac, red=atk
+    global fight_menu, GlobalDialog, fuite, l1, l2, l3, fight_color, stats_ui, p_color, adv_color # blue=fuir, green=pkms, yellow=sac, red=atk
 
-    p_ratio = dresseur.Player.curr_creature.hp / dresseur.Player.curr_creature.max_hp
-    adv_ratio = dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp
+    p_ratio = dresseur.Player.curr_creature.before_hp / dresseur.Player.curr_creature.max_hp
+    adv_ratio = dresseur.Player.encounter.before_hp / dresseur.Player.encounter.max_hp
 
     if p_ratio > 0.5:
         p_color = GREEN
     elif p_ratio > 0.15:
         p_color = YELLOW
     else:
+        if p_color != (255,0,0) and dresseur.Player.curr_creature.hp > 0:
+            for i in range(3):
+                assets.low_hp_snd.play()
         p_color = (255,0,0)
 
     if adv_ratio > 0.5:
@@ -414,28 +419,31 @@ def fight_tab(tab):
     elif adv_ratio > 0.15:
         adv_color = YELLOW
     else:
+        if adv_color != (255,0,0) and dresseur.Player.encounter.hp > 0:
+            for i in range(3):
+                assets.low_hp_snd.play()
         adv_color = (255,0,0)
-
     # on ajoute toutes les infos de l'ui sur une surface qui ne s'actualise pas toutes les frames
     stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 
     stats_ui.blit(pbar, (0, HEIGHT * 0.45))
     stats_ui.blit(advbar, (WIDTH * 0.75, HEIGHT * 0.025))
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.hp} / {dresseur.Player.curr_creature.max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.hp} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.name}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.name}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+    stats_ui.blit(font3.render(f"{round(dresseur.Player.curr_creature.before_hp)} / {dresseur.Player.curr_creature.max_hp} PV", True, WHITE), (20, HEIGHT * 0.505)) # hp_p = 
+    stats_ui.blit(font3.render(f"{round(dresseur.Player.encounter.before_hp)} / {dresseur.Player.encounter.max_hp} PV", True, WHITE), (WIDTH * 0.87, HEIGHT * 0.08)) # hp_adv = 
 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
-    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.name}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.nick}", True, BLACK), (20, HEIGHT * 0.45)) # name_p = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.curr_creature.nick}", True, WHITE), (22, HEIGHT * 0.45)) # name_p2 = 
+
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.nick}", True, BLACK), (WIDTH * 0.77, HEIGHT * 0.025)) # name_adv = 
+    stats_ui.blit(font3.render(f"{dresseur.Player.encounter.nick}", True, WHITE), (WIDTH * 0.771, HEIGHT * 0.025)) # name_adv2 = 
 
     stats_ui.blit(lvlfont.render(f"{dresseur.Player.curr_creature.lvl}", True, WHITE), (383, HEIGHT * 0.452)) # lvl_p = 
     stats_ui.blit(lvlfont.render(f"{dresseur.Player.encounter.lvl}", True, WHITE), (WIDTH * 0.936, HEIGHT * 0.026)) # lvl_adv = 
 
-    pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
-    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.curr_creature.hp / dresseur.Player.curr_creature.max_hp), 8)) # barre de vie joueur
+    pygame.draw.rect(stats_ui, adv_color, (WIDTH * 0.75 + 224, HEIGHT * 0.05 + 9, 192 * (dresseur.Player.encounter.before_hp / dresseur.Player.encounter.max_hp), 8)) # barre de vie adversaire
+    pygame.draw.rect(stats_ui, p_color, (WIDTH * 0 + 64, HEIGHT * 0.5 - 18, 192 * (dresseur.Player.curr_creature.before_hp / dresseur.Player.curr_creature.max_hp), 8)) # barre de vie joueur
 
 
 
@@ -498,7 +506,9 @@ def fight_tab(tab):
         fight_color = fight_menu["color"]
 
 def item_effect(item, pykemon, origin):
+    
     global ball, GlobalDialog
+    pykemon.before_hp = copy.deepcopy(pykemon.hp)
 
     if origin == "p":
         lanceur = f"Votre {pykemon.name}"
@@ -546,6 +556,27 @@ def item_effect(item, pykemon, origin):
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
 
 
+def smooth_hp(creature):
+    global hp_cooldown
+
+    if hp_cooldown <= 0:
+
+        diff = creature.hp - creature.before_hp
+
+        if diff != 0:
+            hp_cooldown = 0.2
+
+            if abs(diff) < 0.1:
+                creature.before_hp = creature.hp
+            else:
+                # La barre parcourt 10% de la distance restante à chaque frame
+                # Ça marche pour le soin (+) et les dégâts (-)
+                creature.before_hp += diff * 0.1
+
+            fight_tab(None)
+    else:
+        hp_cooldown -= 0.1
+
 def fight_round(prefix_l, canPlay, checkup, choice):
     global GlobalDialog
 
@@ -563,6 +594,8 @@ def fight_round(prefix_l, canPlay, checkup, choice):
         lanceur.pps[choice] -= 1
         GlobalDialog = lanceur.atk(lanceur.moveset[choice][5], cible, prefix_l)
         checkup[f"{prefix_l}_atk"] = True
+
+        
         fight_tab(RED) # on actualise les pv etc.
     else:
         if checkup[f"{prefix_l}_pp"] == False:
@@ -575,6 +608,7 @@ def fight_round(prefix_l, canPlay, checkup, choice):
         if GlobalDialog == []:
             GlobalDialog = lanceur.atk("lutte", cible, prefix_l)
             checkup[f"{prefix_l}_atk"] = True
+            
             fight_tab(RED) # on actualise les pv etc.
 
     return checkup # c'est pas une variable globale donc on l'actualise ici
@@ -612,6 +646,7 @@ def main():
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
         if keys[pygame.K_x] and cooldown <= 0 and phase == "game" and dresseur.Player.able:
+            assets.menu_open_snd.play()
             cooldown = 1
             if menu == "None":
                 set_menu(1)
@@ -659,6 +694,7 @@ def main():
                 for entity in entity_mgr.entities:
                     if entity.type == "grass" and entity.map == maps.map_id:
                         set_phase("fight", encounter=entity.get_creature())
+                        
                         fight_tab(RED)
 
             #for entity in entity_mgr.entities:
@@ -688,6 +724,7 @@ def main():
                 close_tab_color = menu_colorh
                 if mouse_click and cooldown <= 0:
                     cooldown = 1
+                    assets.menu_2_snd.play()
                     if menu == "pause":
                         set_menu(0)
                     else:
@@ -711,6 +748,7 @@ def main():
                     if btn[1].collidepoint(mouse_pos):
                         color2 = btn[4][0]
                         if mouse_click:
+                            assets.menu_1_snd.play()
                             set_menu(i + 2)   
                     else:
                         color2 = btn[4][1]
@@ -724,6 +762,7 @@ def main():
                             color2 = btn[4][0]
                             if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
                                 cooldown = 1
+                                assets.menu_1_snd.play()
                                 sous_menu = i + 1 
                                 name = pykfont.render(f"PyKemon: {btn[0].name}",  True, WHITE)
                                 level = pykfont.render(f"Niveau: {str(btn[0].lvl)}", True, WHITE)
@@ -822,6 +861,7 @@ def main():
         elif phase == "fight":
             if intro and cooldown <= 0:
                 get_intro_anim(frame)
+                LeveledUp = False
                 IsFightThemeStarted = False
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
@@ -833,16 +873,31 @@ def main():
 
             screen.blit(fight_bg,(0,0))
 
+            if dresseur.Player.curr_creature.xp > dresseur.Player.curr_creature.req_xp:
+                if  GlobalDialog == []:
+                    assets.exp_max_snd.play()
+                    assets.lvlup_snd.play()
+                    dresseur.Player.curr_creature.lvlup()
+                    GlobalDialog = [f"{dresseur.Player.curr_creature.nick} passe au niveau {dresseur.Player.curr_creature.lvl} !"]
+            else:
+                LeveledUp = True
 
-            if (fuite or (ball['caught'] and not action)) and GlobalDialog == []:
+
+
+            print(f"XP: {dresseur.Player.curr_creature.xp} / {dresseur.Player.curr_creature.req_xp}")
+            if (fuite or (ball['caught'] and not action and LeveledUp)) and GlobalDialog == []:
                 ball = {'type': 'none', 'name': 'none', 'throwing': False, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': 'none', 'pos': [200, HEIGHT], 'caught': False, 'shakes': 0}
-                fuite = False
                 pygame.mixer.stop()
+                if fuite:
+                    assets.fuite_snd.play()
+                fuite = False
                 pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
                 pygame.mixer.music.play(loops=-1, start=0.0)
                 set_phase("game")
 
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
+                smooth_hp(dresseur.Player.curr_creature)
+                smooth_hp(dresseur.Player.encounter)
 
                 screen.blit(dresseur.Player.curr_creature.sprite[1], (WIDTH // 8, HEIGHT * 0.5))
 
@@ -856,16 +911,15 @@ def main():
                         GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
                         fuite = True
                         action = False
-
                     if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
                         GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
                         dresseur.Player.curr_creature.xp += exp
-                        while dresseur.Player.curr_creature.xp > dresseur.Player.curr_creature.req_xp:
-                            dresseur.Player.curr_creature.lvlup()
+                        assets.exp_snd.play()
 
-                        fuite = True
                         action = False
+                        fuite = True
+                            
                         
 
                     # barres d'hp
@@ -911,6 +965,7 @@ def main():
                                     cooldown = 1
                                     if fight_menu['bag_type'] == None:
                                         fight_menu['bag_type'] = fight_menu['btns'][i]
+                                        
                                         fight_tab(YELLOW)
                                     else:
                                         if dresseur.Player.inv[fight_menu['btns'][i]] <= 0:
@@ -928,6 +983,7 @@ def main():
 
                                             
                                             indice = 0 # on simule pour pas casser la condition suivante
+                                            
                                             fight_tab(YELLOW)
 
                     if ball["throwing"]:
@@ -993,8 +1049,9 @@ def main():
                                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
                                         GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp."]
                                         dresseur.Player.curr_creature.xp += exp
-                                        while dresseur.Player.curr_creature.xp > dresseur.Player.curr_creature.req_xp:
-                                            dresseur.Player.curr_creature.lvlup()
+                                        assets.exp_snd.play()
+                                        assets.pykemon_caught_snd.play()
+            
                                         InTeam = False
                                         for i in range(len(dresseur.Player.team)):
                                             if dresseur.Player.team[i] == None and not InTeam:
@@ -1003,7 +1060,7 @@ def main():
 
                                         if not InTeam: # Si attrapé mais pas de place dans l'équipe
                                             GlobalDialog = ["Vous n'avez plus de place dans votre", "équipe. Le Pykemon à été transféré", "dans vos boites."]
-                                        pygame.mixer.stop()
+                                        
 
                                     else:
                                         ball['frame'] = 10

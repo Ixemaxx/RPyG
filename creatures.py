@@ -16,7 +16,7 @@ moves = {"charge": ["Charge", 20, 40, 100, "normal", "charge", "atk"],
          }
 
 class Creature:
-    def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map, speed):
+    def __init__(self, name, hp, attack, defense, sprite, moveset, type, lvl, req_xp, map, speed, ball='pykeball'):
         self.name = name
         self.hp = hp # pour ajouter un peu de variété dans les stats des créatures 
         self.shiny = random.randint(0,3)
@@ -63,8 +63,8 @@ class Creature:
             return assets.heal_snd
         
 
-    def copy(self, ball):
-        creature = Creature(self.name, self.max_hp, self.attack, self.defense, self.sprite, self.moveset, self.type, self.lvl, self.req_xp, 'ball', self.speed)
+    def copy(self, caught_ball):
+        creature = Creature(self.name, self.max_hp, self.attack, self.defense, self.sprite, self.moveset, self.type, self.lvl, self.req_xp, 'ball', self.speed, ball=caught_ball)
 
         creature.pps = copy.deepcopy(self.pps)
         creature.usable_mvs = copy.deepcopy(self.usable_mvs)
@@ -73,7 +73,6 @@ class Creature:
         creature.shiny = copy.deepcopy(self.shiny)
         creature.nick = copy.deepcopy(self.nick)
         creature.status = copy.deepcopy(self.status)
-        creature.ball = ball
         return creature
 
 

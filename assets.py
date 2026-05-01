@@ -31,6 +31,7 @@ menu_1_snd = pygame.mixer.Sound("sounds/menu1.wav")
 menu_2_snd = pygame.mixer.Sound("sounds/menu2.wav")
 menu_open_snd = pygame.mixer.Sound("sounds/menuopen.wav")
 pykemon_caught_snd = pygame.mixer.Sound("sounds/pykeget.wav")
+ball_enter_snd = pygame.mixer.Sound("sounds/ball_enter.wav")
 
 
 # génération des animations de balls

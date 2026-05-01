@@ -56,7 +56,9 @@ fight_ui = [[BLUE, (0, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Fu
             [GREEN, (temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("PyKemons", True, WHITE)],
             [YELLOW, (2 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Objets", True, WHITE)],
             [RED, (3 * temp_width, HEIGHT * 0.9, temp_width, HEIGHT * 0.08), font.render("Attaques", True, WHITE)]]
+
 fuite = False
+fight_end = False
 
 
 
@@ -619,7 +621,7 @@ def fight_round(prefix_l, canPlay, checkup, choice):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball, fight_end
 
     clock = pygame.time.Clock()
     running = True
@@ -808,6 +810,7 @@ def main():
                             if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
                                 cooldown = 1
                                 sous_menu = i + 1 
+                                assets.menu_1_snd.play()
                                 desc = [pykfont.render("",  True, WHITE)]
                                 view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
                                 tab_name = font.render(assets.traduction_part[btn[0]], WHITE, True)
@@ -863,6 +866,7 @@ def main():
                 get_intro_anim(frame)
                 LeveledUp = False
                 IsFightThemeStarted = False
+                CreatureAppeared = False
             elif not intro and not IntroDone:
                 TabState = f"Combat contre {dresseur.Player.encounter.name}"
                 GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
@@ -884,27 +888,65 @@ def main():
 
 
 
-            print(f"XP: {dresseur.Player.curr_creature.xp} / {dresseur.Player.curr_creature.req_xp}")
-            if (fuite or (ball['caught'] and not action and LeveledUp)) and GlobalDialog == []:
+            if (fuite or fight_end or (ball['caught'] and not action and LeveledUp)) and GlobalDialog == []:
                 ball = {'type': 'none', 'name': 'none', 'throwing': False, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': 'none', 'pos': [200, HEIGHT], 'caught': False, 'shakes': 0}
                 pygame.mixer.stop()
                 if fuite:
                     assets.fuite_snd.play()
                 fuite = False
+                fight_end = False
                 pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
                 pygame.mixer.music.play(loops=-1, start=0.0)
                 set_phase("game")
 
             if not intro and phase == "fight": # intro désigne l'animation d'intro du combat
-                smooth_hp(dresseur.Player.curr_creature)
-                smooth_hp(dresseur.Player.encounter)
+                if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
-                screen.blit(dresseur.Player.curr_creature.sprite[1], (WIDTH // 8, HEIGHT * 0.5))
+                    if CreatureAppeared == True:
+                        screen.blit(dresseur.Player.curr_creature.sprite[1], (WIDTH // 8, HEIGHT * 0.5))
+                        smooth_hp(dresseur.Player.curr_creature)
+                        smooth_hp(dresseur.Player.encounter)
+                        # barres d'hp
+                    # pour optimiser: fusionner toutes les infos des barres en une surface
+                        screen.blit(stats_ui, (0,0))
+                    elif GlobalDialog == []:
+                        if CreatureAppeared == False:
+                            GlobalDialog = [f"{dresseur.Player.curr_creature.nick}, Go !"]
+                            CreatureAppeared = "partial"
+                            ball = dresseur.Player.curr_creature.ball
+                            ball = {'type': ball, 'name': f"{assets.inventory[ball]['alias']}", 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[ball][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+                            cooldown = 5
+
+                        # animation d'entrée du pykemon
+                        if CreatureAppeared == "partial" and GlobalDialog == []: # on recrée un if juste après avoir lancé le dialogue pour attendre sa fin, c'est volontaire d'en avoir 2
+                            screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
+                            if cooldown <= 0:
+                                cooldown = 0.25
+
+                                if ball['pos'][0] == -98: # position de départ, joué une fois donc
+                                    assets.throw_snd.play()
+                                
+
+                                ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+
+                                if ball['pos'][0] < WIDTH * 0.17:
+                                    if ball['frame'] < 0:
+                                        ball['frame'] = 8
+                                    else:
+                                        ball['frame'] -= 1
+
+
+                                    ball['pos'][0] += 32
+                                    ball['pos'][1] += 2
+                                    
+                                else:
+                                    CreatureAppeared = True
+                                    assets.ball_enter_snd.play()
+                                    ball = {'type': None, 'name': 'None', 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'caught': False, 'shakes': 0, 'pos':[-98,0]} 
+
 
                 if not ((ball['anim'] == 'shaking' and ball['throwing']) or (ball['pos'][0] > WIDTH * 0.759 and ball['throwing'])):
                     screen.blit(dresseur.Player.encounter.sprite[0], (WIDTH * 0.7, HEIGHT * 0.1)) 
-
-                if IntroDone: # intro Done c'est quand le texte d'intro est terminé
 
                     # Si pykemons K.O
                     if dresseur.Player.curr_creature.hp <= 0 and not fuite and GlobalDialog == []:
@@ -918,15 +960,12 @@ def main():
                         assets.exp_snd.play()
 
                         action = False
-                        fuite = True
-                            
+                        fight_end = True
                         
+                            
+            
 
-                    # barres d'hp
-                    # pour optimiser: fusionner toutes les infos des barres en une surface
-                    screen.blit(stats_ui, (0,0))
-
-                    if not action and not fuite and GlobalDialog == []: # on cache l'interface
+                    if not action and not fuite and GlobalDialog == [] and CreatureAppeared == True: # on cache l'interface
                         # boutons de jeu
                         for element in fight_ui:
                             rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
@@ -986,88 +1025,88 @@ def main():
                                             
                                             fight_tab(YELLOW)
 
-                    if ball["throwing"]:
-                        screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
-                        if ball['anim'] == 'throw' and cooldown <= 0 and GlobalDialog == []:
-                            cooldown = 0.25
+                if ball["throwing"] and CreatureAppeared == True:
+                    screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
+                    if ball['anim'] == 'throw' and cooldown <= 0 and GlobalDialog == []:
+                        cooldown = 0.25
 
-                            if ball['pos'][0] == -98: # position de départ, joué une fois donc
-                                assets.throw_snd.play()
-                            
+                        if ball['pos'][0] == -98: # position de départ, joué une fois donc
+                            assets.throw_snd.play()
+                        
 
-                            ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+                        ball['sprite'] = assets.balls[ball['type']][ball['frame']]
 
-                            if ball['pos'][0] < WIDTH * 0.76:
-                                if ball['frame'] < 0:
-                                    ball['frame'] = 8
-                                else:
-                                    ball['frame'] -= 1
-
-
-                                ball['pos'][0] += 45
-                                ball['pos'][1] -= 17
-                                
+                        if ball['pos'][0] < WIDTH * 0.76:
+                            if ball['frame'] < 0:
+                                ball['frame'] = 8
                             else:
-                                if ball['frame'] < 8:
-                                    ball['frame'] += 1
-                                else:
-                                    ball['frame'] = 0
+                                ball['frame'] -= 1
 
-                                ball['pos'][1] += 7
 
-                                if ball['pos'][1] > HEIGHT * 0.28:
-                                    ball['anim'] = 'shaking'
-                                    ball['frame'] = 11
-                                    ball['sprite'] = assets.balls[ball['type']][ball['frame']]
-                                    if random.randint(0,100) < ball['catch_rate'] * 100:
-                                        ball['shakes'] = 3
-                                        ball['caught'] = True
-                                    else:
-                                        ball['shakes'] = random.randint(1,2)
-                                        ball['caught'] = False
-
-                        elif ball['anim'] == 'shaking' and cooldown <= 0:
-                            cooldown = 1
-                            ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
-
-                            if ball['frame'] == 14:
-                                assets.shaking_snd.play()
-
-                            if ball['frame'] < 16 and ball['shakes'] > 0:
+                            ball['pos'][0] += 45
+                            ball['pos'][1] -= 17
+                            
+                        else:
+                            if ball['frame'] < 8:
                                 ball['frame'] += 1
                             else:
-                                if ball['shakes'] > 0:
-                                    ball['frame'] = 11
-                                    ball['shakes'] -= 1
+                                ball['frame'] = 0
 
-                                if ball['shakes'] <= 0 and ball['frame'] != 9:
-                                    if ball['caught']:
-                                        ball['frame'] = 9
-                                        assets.caught_snd.play()
-                                        action = False
-                                        checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
-                                        exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
-                                        GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp."]
-                                        dresseur.Player.curr_creature.xp += exp
-                                        assets.exp_snd.play()
-                                        assets.pykemon_caught_snd.play()
-            
-                                        InTeam = False
-                                        for i in range(len(dresseur.Player.team)):
-                                            if dresseur.Player.team[i] == None and not InTeam:
-                                                dresseur.Player.team[i] = dresseur.Player.encounter.copy(ball['type'])
-                                                InTeam = True
+                            ball['pos'][1] += 7
 
-                                        if not InTeam: # Si attrapé mais pas de place dans l'équipe
-                                            GlobalDialog = ["Vous n'avez plus de place dans votre", "équipe. Le Pykemon à été transféré", "dans vos boites."]
-                                        
+                            if ball['pos'][1] > HEIGHT * 0.28:
+                                ball['anim'] = 'shaking'
+                                ball['frame'] = 11
+                                ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+                                if random.randint(0,100) < ball['catch_rate'] * 100:
+                                    ball['shakes'] = 3
+                                    ball['caught'] = True
+                                else:
+                                    ball['shakes'] = random.randint(1,2)
+                                    ball['caught'] = False
 
-                                    else:
-                                        ball['frame'] = 10
-                                        GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}..."]
-                                        ball["throwing"] = False
+                    elif ball['anim'] == 'shaking' and cooldown <= 0:
+                        cooldown = 1
+                        ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
 
-                            ball['sprite'] = assets.balls[ball['type']][ball['frame']]
+                        if ball['frame'] == 14:
+                            assets.shaking_snd.play()
+
+                        if ball['frame'] < 16 and ball['shakes'] > 0:
+                            ball['frame'] += 1
+                        else:
+                            if ball['shakes'] > 0:
+                                ball['frame'] = 11
+                                ball['shakes'] -= 1
+
+                            if ball['shakes'] <= 0 and ball['frame'] != 9:
+                                if ball['caught']:
+                                    ball['frame'] = 9
+                                    assets.caught_snd.play()
+                                    action = False
+                                    checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                    exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
+                                    GlobalDialog = [f'Vous avez attrapé {dresseur.Player.encounter.name} !', f"Vous gagnez {exp} pts d'Exp."]
+                                    dresseur.Player.curr_creature.xp += exp
+                                    assets.exp_snd.play()
+                                    assets.pykemon_caught_snd.play()
+        
+                                    InTeam = False
+                                    for i in range(len(dresseur.Player.team)):
+                                        if dresseur.Player.team[i] == None and not InTeam:
+                                            dresseur.Player.team[i] = dresseur.Player.encounter.copy(ball['type'])
+                                            InTeam = True
+
+                                    if not InTeam: # Si attrapé mais pas de place dans l'équipe
+                                        GlobalDialog = ["Vous n'avez plus de place dans votre", "équipe. Le Pykemon à été transféré", "dans vos boites."]
+                                    
+
+                                else:
+                                    ball['frame'] = 10
+                                    GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}..."]
+                                    ball["throwing"] = False
+
+                        ball['sprite'] = assets.balls[ball['type']][ball['frame']]
 
 
                                         

@@ -122,7 +122,7 @@ class Dresseur(pygame.sprite.Sprite):
             self.anim_timer = 0
 
         self.anim_timer += 0.1
-        if self.anim_timer >= 1:
+        if self.anim_timer >= 0.7:
             self.anim_timer = 0
             self.curr_frame += 1
         
@@ -263,6 +263,7 @@ class Dresseur(pygame.sprite.Sprite):
         if self.dialog == []:
             if self.state == "banc":
                 self.able = False
+                self.ride = False
 
     def get_player_status(self): # vitesse et spritesheet du joueur
         speed = 230 # vitesse de base

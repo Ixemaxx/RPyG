@@ -530,19 +530,19 @@ def item_effect(item, pykemon, origin):
         return [f"Vous utilisez un total soin sur {lanceur}", "Il n'a plus d'effet de status !'"]
 
     if item == 'pykeball':
-        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 0.5, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
 
     if item == 'superball':
-        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.65, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 0.65, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
     
     if item == 'hyperball':
-        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 0.75, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 0.75, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
     
     if item == 'masterball':
-        ball = {'type': item, 'name': f'{assets.inventory[item]['alias']}', 'throwing': True, 'catch_rate': 1, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
+        ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 1, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
         return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
 
 

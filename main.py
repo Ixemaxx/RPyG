@@ -7,6 +7,7 @@ import creatures as pkmns
 import random
 import assets
 import copy
+import json # pour la sauvegarde
 
 # Initialisation de Pygame
 pygame.init()
@@ -65,7 +66,7 @@ fight_end = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.65
+GameVersion = 0.67
 TabState = "Loading"
 
 cooldown = 0
@@ -143,7 +144,123 @@ fps = 0
 pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
 
 
+def save_game(): # IA
+    # Préparation des données de l'équipe
+    team_data = []
+    for pkm in dresseur.Player.team:
+        if pkm is not None:
+            team_data.append({
+                "name": pkm.name,
+                "nick": pkm.nick,
+                "hp": pkm.hp,
+                "max_hp": pkm.max_hp,
+                "lvl": pkm.lvl,
+                "xp": pkm.xp,
+                "pps": pkm.pps, # On sauvegarde l'état actuel des points de pouvoir
+                "shiny": pkm.shiny,
+                "ball": pkm.ball,
+                "def": pkm.defense,
+                "atk": pkm.attack,
+                "speed": pkm.speed,
+                "req_xp": pkm.req_xp,
+                "moveset": pkm.moveset,
+                "status": pkm.status,
+                "type": pkm.type
+            })
+        else:
+            team_data.append(None)
+
+    save_data = {
+        "player_name": dresseur.Player.username,
+        "map_id": maps.map_id,
+        "player_pos": [dresseur.Player.x, dresseur.Player.y],
+        "player_dir": dresseur.Player.dir,
+        "inventory": dresseur.Player.inv,
+        "team": team_data
+    }
+
+    with open("saves/save.json", "w") as f:
+        json.dump(save_data, f, indent=4)
+    print("Partie sauvegardée !")
+
+def reset_game():
+    try:
+        with open("saves/template.json", "r") as f:
+            data = json.load(f)
+        
+        with open("saves/save.json", "w") as f:
+            json.dump(data, f, indent=4)
+
+        load_game("save")
+    except:
+        print("Erreur de reset, données conservées")
+
+def load_game(file): # IA
+    try:
+        with open(f"saves/{file}.json", "r") as f:
+            data = json.load(f)
+        
+        # 1. Restauration du joueur et de sa position
+        dresseur.Player.username = data["player_name"]
+        dresseur.Player.x = data["player_pos"][0]
+        dresseur.Player.y = data["player_pos"][1]
+        dresseur.Player.inv = data["inventory"]
+        dresseur.Player.dir = data["player_dir"]
+
+        # 2. Restauration de la carte
+        # On utilise getattr pour récupérer l'objet map via son nom (ex: "lil_garden")
+        target_map = getattr(maps, data["map_id"])
+        maps.change_map(target_map, data["map_id"])
+
+        # 3. Restauration de l'équipe
+        # Restauration de l'équipe
+        for i, pkm_data in enumerate(data["team"]):
+            if pkm_data is not None:
+                # On tente de créer l'objet de base
+                new_pkm = pkmns.base_copy(pkm_data["name"]) 
+                print(new_pkm)
+                
+                # SÉCURITÉ : On vérifie que new_pkm n'est pas None
+                if new_pkm is not None:
+                    new_pkm.nick = pkm_data["nick"]
+                    new_pkm.hp = pkm_data["hp"]
+                    new_pkm.max_hp = pkm_data["max_hp"]
+                    new_pkm.before_hp = pkm_data["hp"]
+                    new_pkm.attack = pkm_data["atk"]
+                    new_pkm.defense = pkm_data["def"]
+                    new_pkm.speed = pkm_data["speed"]
+                    new_pkm.lvl = pkm_data["lvl"]
+                    new_pkm.xp = pkm_data["xp"]
+                    new_pkm.req_xp = pkm_data["req_xp"]
+                    new_pkm.type = pkm_data["type"]
+                    new_pkm.shiny = pkm_data["shiny"]
+                    new_pkm.ball = pkm_data["ball"]
+                    new_pkm.status = pkm_data["status"]
+                    new_pkm.pps = pkm_data["pps"]
+                    new_pkm.moveset = pkm_data["moveset"]
+                    new_pkm.usable_mvs = [move[5] for move in new_pkm.moveset]
+
+                    dresseur.Player.team[i] = new_pkm
+                else:
+                    print(f"Alerte : Impossible de recréer {pkm_data['name']}")
+                    dresseur.Player.team[i] = None
+            else:
+                dresseur.Player.team[i] = None
+        
+        # Mise à jour de la créature active (celle qui sort en premier)
+        dresseur.Player.curr_creature = dresseur.Player.team[0]
+        
+        print(f"Content de te revoir, {dresseur.Player.username}. Partie chargée !")
+        
+    except FileNotFoundError:
+        print("Erreur : Aucun fichier de sauvegarde trouvé.")
+        load_game("template")
+    except Exception as e:
+        print(f"Erreur lors du chargement : {e}")
+
 # CHANGEMENT DE PHASE
+
+
 
 def set_phase(new_phase, encounter=None):
     global phase, bg_color, TabState, intro, frame, IntroDone
@@ -322,6 +439,59 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
                 btn_list[i].append(texte)
                 btn_list[i].append(texte.get_width())
                 btn_list[i].append(btn_datas[0])
+
+
+            txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
+            btn_txt_pos = [((btn_txt_x + btn_w / 2) - txt_w / 2), (btn_txt_y + btn_h / 4), btn_txt_offest]
+
+        elif menu == "save":
+            width = WIDTH // 3
+            height = 0.3 * HEIGHT
+            btn_w = 0.8 * width
+            btn_h = 0.7 * height
+
+        
+            menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
+            btn_list = [["Sauvegarder"], ["Réinitialiser"]] # on récupère les infos du sac
+            btn_datas = [[PINK,DARK_PURPLE]]
+
+            menu_color1 = DARK_PURPLE # fenetre du fond et texte dans les boutons
+            menu_color2 = PURPLE # boutons et textes hors des boutons
+            menu_colorh = PINK
+
+            menu_title = "Sauvegarder"
+            menu_title_pos = [WIDTH * 0.01, HEIGHT * 0.015]
+            
+            # btns
+            btn_txt_x = WIDTH / 2 - btn_w / 2
+            btn_txt_y = HEIGHT * 0.3
+            btn_txt_offest = HEIGHT * 0.09 # différence
+            
+
+            for i in range(2): # liste = [id, rect, texte, width, colors]
+                
+                if i == 0:
+                    rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.25, btn_w, btn_h) # ligne 1 menu
+
+                    part = str(btn_list[i][0])
+                    texte = font.render("Sauvegarder", True, WHITE)
+
+
+                    btn_list[i].append(rect)
+                    btn_list[i].append(texte)
+                    btn_list[i].append(texte.get_width())
+                    btn_list[i].append(btn_datas[0])
+                else:
+                    rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, btn_w, btn_h) # ligne 2 menu
+
+                    part = str(btn_list[i][0])
+                    texte = font.render("Reset", True, (255,0,0))
+
+                    btn_list[i].append(rect)
+                    btn_list[i].append(texte)
+                    btn_list[i].append(texte.get_width())
+                    btn_list[i].append(btn_datas[0])
+
 
 
             txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
@@ -547,15 +717,15 @@ def item_effect(item, pykemon, origin):
 
     if item == 'superball':
         ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 0.65, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
-        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}."]
     
     if item == 'hyperball':
         ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 0.75, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
-        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}."]
     
     if item == 'masterball':
         ball = {'type': item, 'name': f"{assets.inventory[item]['alias']}", 'throwing': True, 'catch_rate': 1, 'anim': 'throw', 'frame': 0, 'sprite': assets.balls[item][0], 'pos': [-98, HEIGHT * 0.65], 'caught': False, 'shakes': 0}
-        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}"]
+        return [f"Vous lancez une {assets.inventory[item]['alias']} sur", f"{cible}."]
 
 
 def smooth_hp(creature):
@@ -627,8 +797,6 @@ def main():
     running = True
 
     #on définit la position du joueur (centre) ainsi que son sprite
-    dresseur.Player.x = WIDTH // 2 - dresseur.Player.sprite.get_width() // 2
-    dresseur.Player.y = HEIGHT // 2 - dresseur.Player.sprite.get_height() // 2
     dresseur.Player.selfbox = pygame.Rect(dresseur.Player.x, dresseur.Player.y, 98, 98)
 
     dresseur.Player.extract_anim()
@@ -638,12 +806,9 @@ def main():
     TabState = maps.map_id
     pack_map()
 
-    dresseur.Player.team[0] = pkmns.base_copy("punkromatides") # debug pour ne pas commencer à 0 pokémons
-    for i in range(dresseur.Player.team[0].lvl - 1):
-        dresseur.Player.team[0].lvlup()
-    dresseur.Player.curr_creature = dresseur.Player.team[0]
 
     while running:
+
         keys = pygame.key.get_pressed()
         dt =  clock.tick(60) / 1000  # Delta time in milliseconds.
 
@@ -654,6 +819,8 @@ def main():
                 set_menu(1)
             else:
                 set_menu(0)
+        if keys[pygame.K_r] and cooldown <= 0 and phase == "game" and dresseur.Player.able:
+            save_game()
 
         if cooldown >= 0: #cooldown utilisé pour les menus
             cooldown -= 0.1
@@ -856,6 +1023,29 @@ def main():
                     screen.blit(tab_name, (WIDTH * 0.04, HEIGHT * 0.17))
                     for i in range(len(desc)):
                         screen.blit(desc[i], (WIDTH * 0.04, HEIGHT * 0.24 + (i * HEIGHT * 0.03)))
+
+            elif menu == "save":
+                for i, btn in enumerate(btn_list):
+                        if btn[1].collidepoint(mouse_pos):
+                            color2 = btn[4][0]
+                            if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
+                                cooldown = 1
+                                assets.menu_1_snd.play()
+                                if btn[0] == "Sauvegarder":
+                                    save_game()
+                                else:
+                                    ask = input("Voulez vous vraiment effacer la sauvegarde ? (o/n)") # validation obsolète, à remplacer
+                                    if ask == "o":
+                                        reset_game()
+                                    else:
+                                        input("Opération annulée.")
+                                
+                                
+                        else:
+                            color2 = btn[4][1]
+                        pygame.draw.rect(screen, color2, btn[1]) # color2
+                        screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
+
                     
             else: 
                 print("menu inconnu")
@@ -1047,12 +1237,17 @@ def main():
                             ball['pos'][1] -= 17
                             
                         else:
+                            
+                            if ball['pos'][1] < HEIGHT * 0.1:
+                                assets.ball_enter_snd.play()
+
                             if ball['frame'] < 8:
                                 ball['frame'] += 1
                             else:
                                 ball['frame'] = 0
 
                             ball['pos'][1] += 7
+                            
 
                             if ball['pos'][1] > HEIGHT * 0.28:
                                 ball['anim'] = 'shaking'
@@ -1103,7 +1298,7 @@ def main():
 
                                 else:
                                     ball['frame'] = 10
-                                    GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}..."]
+                                    GlobalDialog = [f"Vous n'avez pas réussi à attraper {dresseur.Player.encounter.name}...", "La honte."]
                                     ball["throwing"] = False
 
                         ball['sprite'] = assets.balls[ball['type']][ball['frame']]
@@ -1114,52 +1309,52 @@ def main():
 
 
 
-                    elif action == True and GlobalDialog == [] and not ball['throwing']: # si action == True
-                        # le checkup permet de se situer dans la boucle
+                elif action == True and GlobalDialog == [] and not ball['throwing']: # si action == True
+                    # le checkup permet de se situer dans la boucle
 
-                        # on vérifie si les pykemons ont encore des pp (cas de lutte)
-                        PcanPlay = False
-                        for pp in dresseur.Player.curr_creature.pps:
-                            if pp != 0:
-                                PcanPlay = True
+                    # on vérifie si les pykemons ont encore des pp (cas de lutte)
+                    PcanPlay = False
+                    for pp in dresseur.Player.curr_creature.pps:
+                        if pp != 0:
+                            PcanPlay = True
 
-                        AdvcanPlay = False
-                        for pp in dresseur.Player.encounter.pps:
-                            if pp != 0:
-                                AdvcanPlay = True
+                    AdvcanPlay = False
+                    for pp in dresseur.Player.encounter.pps:
+                        if pp != 0:
+                            AdvcanPlay = True
 
-                        AdvChoice = random.randint(0, len(dresseur.Player.encounter.moveset) - 1)
+                    AdvChoice = random.randint(0, len(dresseur.Player.encounter.moveset) - 1)
 
-                        if (dresseur.Player.curr_creature.pps[indice] > 0 or not PcanPlay) or checkup["p_atk"] == True: # PP joueur > 0 mais pas incapable d'attaquer
-                            
-                            if dresseur.Player.curr_creature.speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
+                    if (dresseur.Player.curr_creature.pps[indice] > 0 or not PcanPlay) or checkup["p_atk"] == True: # PP joueur > 0 mais pas incapable d'attaquer
+                        
+                        if dresseur.Player.curr_creature.speed > dresseur.Player.encounter.speed: # on prend en compte la vitesse de chaque pykemon
 
-                                if checkup["p_atk"] == False:
-                                    checkup = fight_round("p", PcanPlay, checkup, indice)
-                                          
-                                elif checkup["adv_atk"] == False and GlobalDialog == []:
-                                    checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
+                            if checkup["p_atk"] == False:
+                                checkup = fight_round("p", PcanPlay, checkup, indice)
+                                        
+                            elif checkup["adv_atk"] == False and GlobalDialog == []:
+                                checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
 
-                            else: #si adversaire plus rapide: 
-                                               
-                                if checkup["adv_atk"] == False:
-                                    checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
-                                    
-                                elif checkup["p_atk"] == False and GlobalDialog == []:
-                                    checkup = fight_round("p", PcanPlay, checkup, indice)
-
-                            # cas d'arrêt du tour
-                            if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
-                                action = False
-    
-                        else:
-                            # cas d'arrêt du tour si plus de pp
-                            if checkup["p_pp"] == False:
-                                GlobalDialog = ["Plus de PP pour cette capacité"]
-                                checkup["p_pp"] = True
+                        else: #si adversaire plus rapide: 
+                                            
+                            if checkup["adv_atk"] == False:
+                                checkup = fight_round("adv", AdvcanPlay, checkup, AdvChoice)
                                 
-                            if GlobalDialog == []:
-                                action = False
+                            elif checkup["p_atk"] == False and GlobalDialog == []:
+                                checkup = fight_round("p", PcanPlay, checkup, indice)
+
+                        # cas d'arrêt du tour
+                        if GlobalDialog == [] and checkup["p_atk"] == True and checkup["adv_atk"] == True:
+                            action = False
+
+                    else:
+                        # cas d'arrêt du tour si plus de pp
+                        if checkup["p_pp"] == False:
+                            GlobalDialog = ["Plus de PP pour cette capacité"]
+                            checkup["p_pp"] = True
+                            
+                        if GlobalDialog == []:
+                            action = False
             
                             
   
@@ -1205,6 +1400,8 @@ def main():
         pygame.display.flip()
 
     pygame.quit()
+
+load_game("save")
 
 pygame.mixer.music.load("sounds/town.mp3")  # Charger la musique
 pygame.mixer.music.play(loops=-1, start=0.0)

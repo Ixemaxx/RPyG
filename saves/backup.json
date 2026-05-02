@@ -1,0 +1,79 @@
+{
+    "player_name": "Ixemhack",
+    "map_id": "lil_garden",
+    "player_pos": [
+        598.1766666666613,
+        761.5733333333329
+    ],
+    "player_dir": "l",
+    "inventory": {
+        "pykeball": 10,
+        "superball": 5,
+        "hyperball": 3,
+        "masterball": 10,
+        "potion": 5,
+        "guerison": 1,
+        "rappel": 2,
+        "rappel_max": 1,
+        "total_soin": 2,
+        "dex": 1,
+        "bike": 1
+    },
+    "team": [
+        {
+            "name": "Punkromatides",
+            "nick": "Punky",
+            "hp": 140,
+            "max_hp": 140,
+            "lvl": 999,
+            "xp": 0,
+            "pps": [
+                480,
+                1200,
+                1200
+            ],
+            "shiny": 0,
+            "ball": "masterball",
+            "def": 180,
+            "atk": 1200,
+            "speed": 8,
+            "req_xp": 24.0,
+            "moveset": [
+                [
+                    "HACK",
+                    1200,
+                    200,
+                    100,
+                    "feu",
+                    "dracom",
+                    "atk"
+                ],
+                [
+                    "Draco-M\u00e9t\u00e9ores",
+                    130,
+                    5,
+                    90,
+                    "dragon",
+                    "dracom",
+                    "atk2"
+                ],
+                [
+                    "Soin",
+                    130,
+                    120,
+                    100,
+                    "dragon",
+                    "soin",
+                    "atk2"
+                ]
+            ],
+            "status": null,
+            "type": "normal"
+        },
+        null,
+        null,
+        null,
+        null,
+        null
+    ]
+}

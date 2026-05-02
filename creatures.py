@@ -54,6 +54,9 @@ class Creature:
         self.speed += 2
         self.before_hp = self.hp
 
+    def nick(self, nickname): # renommer le Pykemon
+        self.nick = nickname
+
     def get_sound(self, snd):
         if snd == "atk":
             return assets.atk_snd
@@ -169,7 +172,7 @@ def base_copy(creature_name):
         return Creature(*params)
     return None
 
-bookmark = {"punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [moves["charge"], moves["dracom"]], "normal", random.randint(2, 5), 20 , "lil_garden", 6]}
+bookmark = {"Punkromatides": ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [moves["charge"], moves["dracom"]], "normal", 2, 20 , "lil_garden", 6]}
 
 types = {
     "normal": {"roche": 0.5, "spectre": 0, "acier": 0.5},

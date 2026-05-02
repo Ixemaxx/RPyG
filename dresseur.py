@@ -388,7 +388,7 @@ class Dresseur(pygame.sprite.Sprite):
             
 
 # Création des deux personnages
-Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(), (100,100)), username="Ixemax") 
+Player = Dresseur(sprite_sheet=pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(), (100,100)), username="Red") 
 #on met la texture en carré comme ça on a pas de problème pour piocher un sprite (largeur != hauteur sur l'originale)
 
 grass_player_sheet = pygame.transform.scale(pygame.image.load("sprites/persos/player_grass.png").convert_alpha(), (100,100))

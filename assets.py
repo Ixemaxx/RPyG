@@ -33,6 +33,8 @@ menu_open_snd = pygame.mixer.Sound("sounds/menuopen.wav")
 pykemon_caught_snd = pygame.mixer.Sound("sounds/pykeget.wav")
 ball_enter_snd = pygame.mixer.Sound("sounds/ball_enter.wav")
 
+init = False # pour déterminer si la save a chargée
+
 
 # génération des animations de balls
 balls_tex = pygame.image.load("sprites/items/balls.png").convert_alpha()

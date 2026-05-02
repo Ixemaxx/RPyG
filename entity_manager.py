@@ -126,7 +126,7 @@ little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case
 entities.append(little_garden_warp_1)
 
 little_garden_grass = Entity(type = "grass", x = case * 1, y = case * 6 , map="lil_garden",\
-                               state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=["punkromatides"], grass_levels=[2,4])
+                               state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=["Punkromatides"], grass_levels=[2,4])
 
 entities.append(little_garden_grass)
 

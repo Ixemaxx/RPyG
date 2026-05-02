@@ -1,0 +1,63 @@
+{
+    "player_name": "Red",
+    "map_id": "lil_house",
+    "player_pos": [
+        910,
+        490
+    ],
+    "player_dir": "d",
+    "inventory": {
+        "pykeball": 10,
+        "potion": 5,
+        "rappel": 2,
+        "dex": 1,
+        "bike": 1
+    },
+    "team": [
+        {
+            "name": "Punkromatides",
+            "nick": "Punkromatides",
+            "hp": 12,
+            "max_hp": 12,
+            "lvl": 2,
+            "xp": 0,
+            "pps": [
+                40,
+                5
+            ],
+            "shiny": 2,
+            "ball": "pykeball",
+            "def": 12,
+            "atk": 12,
+            "speed": 12,
+            "req_xp": 34.559999999999995,
+            "moveset": [
+                [
+                    "Charge",
+                    20,
+                    40,
+                    100,
+                    "normal",
+                    "charge",
+                    "atk"
+                ],
+                [
+                    "Draco-M\u00e9t\u00e9ores",
+                    130,
+                    5,
+                    90,
+                    "dragon",
+                    "dracom",
+                    "atk2"
+                ]
+            ],
+            "status": null,
+            "type": "normal"
+        },
+        null,
+        null,
+        null,
+        null,
+        null
+    ]
+}

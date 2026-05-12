@@ -14,6 +14,8 @@ entities = []
 case = 120 # côté d'une tile
 all_sprites = pygame.sprite.Group()
 
+fight = None
+
 class Entity(pygame.sprite.Sprite):
     def __init__(self, type, x, y, map, state, npc_name=None, npc_dir=None, npc_sprite=None, npc_team=None, reward=None, npc_dialog = None, 
                  npc_action = 0, npc_hitbox=None, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None,
@@ -116,24 +118,45 @@ nurse_npc = Entity(type = "npc", x = case * 6 - (case * 0.87), y = case * 5 - ca
                              (100,100)), npc_team = None, reward = 100, npc_dialog = ["Je vais soigner tes Pykemons","...", "Et voila ils sont en pleine forme !"], npc_action = 4)
                                 #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
-
 entities.append(nurse_npc)
 
-little_garden_warp_1 = Entity(type = "warp", x = case * 13 + case // 4, y = case * 5 , map="lil_garden",\
-                               state = 0, warp_dest = maps.lil_house, warp_name = "lil_house",\
-                                warp_tp = (case * 8.5 - (case * 0.87), case * 8 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
+dresseur_npc = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 2 - case // 2, map = "lil_garden",\
+                              state = 0, npc_name = "Dresseur", npc_dir = "l", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(),\
+                             (100,100)), 
+                             npc_team = ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [pkmns.moves["charge"], pkmns.moves["dracom"]], "normal", 2, 20 , "lil_garden", 6],
+                               reward = 100, npc_dialog = ["TU ME CACHES LA VUE SUR LE PAYSAGE !", "Battons nous !"], npc_action = 4)
+                                #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
-entities.append(little_garden_warp_1)
+
+entities.append(dresseur_npc)
+
+little_house_in = Entity(type = "warp", x = case * 13 + case // 4, y = case * 5 , map="lil_garden",\
+                               state = 0, warp_dest = maps.lil_house, warp_name = "lil_house",\
+                                warp_tp = (case * 8.35 - (case * 0.87), case * 8 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
+
+entities.append(little_house_in)
+
+pkmn_center_in = Entity(type = "warp", x = case * 3 + case // 4, y = case * 3 , map="lil_garden",\
+                               state = 0, warp_dest = maps.pkmn_center, warp_name = "pkmn_center",\
+                                warp_tp = (case * 8.35 - (case * 0.87), case * 7 - case // 3), warp_dir ="u", req_dir = "u",hitbox_h = case, hitbox_w = case // 2)
+
+entities.append(pkmn_center_in)
 
 little_garden_grass = Entity(type = "grass", x = case * 1, y = case * 6 , map="lil_garden",\
                                state = 0,hitbox_h = case * 4, hitbox_w = case * 2, grass_creatures=["Punkromatides"], grass_levels=[2,4])
 
 entities.append(little_garden_grass)
 
-little_house_warp = Entity(type = "warp", x = case * 7, y = case * 8.95 , map = "lil_house",\
+little_house_out = Entity(type = "warp", x = case * 7, y = case * 8.95 , map = "lil_house",\
                             state = 0, warp_dest = maps.lil_garden, warp_name = "lil_garden",\
-                            warp_tp=(case * 14 - (case * 0.87), case * 6 - case // 3), warp_dir = "d", hitbox_h = case, hitbox_w = case*2)
+                            warp_tp=(case * 13.9 - (case * 0.87), case * 6 - case // 3), warp_dir = "d", hitbox_h = case, hitbox_w = case*2)
 
-entities.append(little_house_warp)
+entities.append(little_house_out)
+
+pkmn_center_out = Entity(type = "warp", x = case * 6, y = case * 8.95 , map = "pkmn_center",\
+                            state = 0, warp_dest = maps.lil_garden, warp_name = "lil_garden",\
+                            warp_tp=(case * 3.8 - (case * 0.87), case * 3.5 - case // 3), warp_dir = "d", hitbox_h = case, hitbox_w = case*2)
+
+entities.append(pkmn_center_out)
 
 all_sprites = get_curr_entities(maps.map_id)

@@ -1,9 +1,9 @@
 {
     "player_name": "Red",
-    "map_id": "lil_house",
+    "map_id": "lil_garden",
     "player_pos": [
-        910,
-        490
+        755.7266666666536,
+        452.83666666666295
     ],
     "player_dir": "d",
     "inventory": {

@@ -372,14 +372,19 @@ class Dresseur(pygame.sprite.Sprite):
                     self.dialog_end = False
                     assets.dialog_snd.play()
             if keys[keymap["a"]] and self.able and 'bike' in self.inv: # si on peut bouger, 
-                self.cooldown = 2.5
-                if self.ride == False:
-                    self.ride = True
-                    assets.bicycle_snd.play()
-                else:
-                    self.ride = False
+                if maps.map_id not in maps.Building:
+                    self.cooldown = 2.5
+                    if self.ride == False:
+                        self.ride = True
+                        assets.bicycle_snd.play()
+                    else:
+                        self.ride = False
 
-                self.get_player_status()
+                    self.get_player_status()
+                else:
+                    self.able = False
+                    self.dialog = [["Je ne devrais pas m'en servir ici..."], None, "Pensée"]
+                    self.dialog_end = False
 
                 
 

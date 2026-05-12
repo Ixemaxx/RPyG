@@ -832,6 +832,9 @@ def main():
         # Dans main.py, à l'intérieur de la boucle while running :
 
         if maps.isNewMap:
+            if maps.map_id in maps.Building:
+                dresseur.Player.ride = False
+                dresseur.Player.animate_dresseur(f"idle_{dresseur.Player.dir}")
             maps.isNewMap = False
             TabState = maps.SectionName[maps.map_id] # on utilise l'id de la map pour 
             # 1. On récupère les nouvelles entités de la nouvelle map
@@ -1265,7 +1268,10 @@ def main():
                         ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
 
                         if ball['frame'] == 14:
-                            assets.shaking_snd.play()
+                            assetsEntity(type = "npc", x = case * 6 - (case * 0.87), y = case * 5 - case // 3, map = "lil_garden",\
+                              state = 0, npc_name = "Infirmière", npc_dir = "u", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
+                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Je vais soigner tes Pykemons","...", "Et voila ils sont en pleine forme !"], npc_action = 4)
+                                #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur].shaking_snd.play()
 
                         if ball['frame'] < 16 and ball['shakes'] > 0:
                             ball['frame'] += 1

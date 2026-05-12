@@ -1,8 +1,11 @@
 import pygame
+import os
 
 pygame.init()
 pygame.mixer.init()
 pygame.display.set_mode((1920, 1080))
+
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # sounds
 grass_snd = pygame.mixer.Sound("sounds/grass.mp3")

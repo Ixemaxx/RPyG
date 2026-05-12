@@ -66,7 +66,7 @@ fight_end = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.67
+GameVersion = 0.68
 TabState = "Loading"
 
 cooldown = 0
@@ -683,9 +683,9 @@ def fight_tab(tab):
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
         if fight_menu['pykemon'] == None:
             fight_menu = {"rect": rect,
-                        "btns": ["heals","balls"],
-                        "title": font.render("Sac", True, WHITE),
-                        "color": YELLOW,
+                        "btns": [],
+                        "title": font.render("Equipe", True, WHITE),
+                        "color": GREEN,
                         "btns-text": [],
                         #DMG, PP, Precision, type
                         "subtext": [], 
@@ -697,25 +697,39 @@ def fight_tab(tab):
                 if pkmn == None:
                     pass
                 else:
+                    fight_menu['btns'].append(pkmn)
                     fight_menu['btns-text'].append(pykfont.render(pkmn.nick, True, WHITE))
-                    fight_menu['subtext'].append(pykfont.render(f"{pkmn.hp} / {pkmn.max_hp}", True, WHITE))
+                    fight_menu['subtext'].append(pykfont.render(f"PVs: {pkmn.hp} / {pkmn.max_hp}", True, WHITE))
         else:
-            btns = []
-            btns_text = []
-            for pkmn in dresseur.Player.team:
-                if dresseur.Player.team.hp > 0:
-                    color = WHITE
-                else:
-                    color = RED
-                btns.append(pkmn)
-                btns_text.append(pykfont.render(f"PVs: {pkmn.hp} / {pkmn.max_hp}", True, color))
+            fight_menu['btns'] = ["change","back"]
+            fight_menu['btns-text'] = [pykfont.render("Changer", True, WHITE), pykfont.render("Retour", True, WHITE)]
 
-            if btns == []:
-                fight_menu['pykemon'] = None
-                fight_tab[GREEN]
-            else:
-                fight_menu['btns'] = btns
-                fight_menu['btns-text'] = btns_text
+        fight_color = fight_menu["color"]
+
+    elif tab == DARK_GREEN:
+        rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
+        if fight_menu['pykemon'] == None:
+            fight_menu = {"rect": rect,
+                        "btns": [],
+                        "title": font.render("Choisissez", True, WHITE),
+                        "color": DARK_GREEN,
+                        "btns-text": [],
+                        #DMG, PP, Precision, type
+                        "subtext": [], 
+                        "type": "bag",
+                        'bag_type': None,
+                        'pykemon': None}
+            
+            for pkmn in dresseur.Player.team:
+                if pkmn == None:
+                    pass
+                else:
+                    fight_menu['btns'].append(pkmn)
+                    if pkmn.hp > 0:
+                        fight_menu['btns-text'].append(pykfont.render(pkmn.nick, True, WHITE))
+                    else:
+                        fight_menu['btns-text'].append(pykfont.render(pkmn.nick, True, RED))
+                    fight_menu['subtext'].append(pykfont.render(f"PVs: {pkmn.hp} / {pkmn.max_hp}", True, WHITE))
 
         fight_color = fight_menu["color"]
 
@@ -1147,6 +1161,7 @@ def main():
                         screen.blit(stats_ui, (0,0))
                     elif GlobalDialog == []:
                         if CreatureAppeared == False:
+                            IsTeamAlive = True
                             GlobalDialog = [f"{dresseur.Player.curr_creature.nick}, Go !"]
                             CreatureAppeared = "partial"
                             ball = dresseur.Player.curr_creature.ball
@@ -1177,8 +1192,10 @@ def main():
                                     
                                 else:
                                     CreatureAppeared = True
+                                    cooldown = 6
                                     assets.ball_enter_snd.play()
                                     ball = {'type': None, 'name': 'None', 'throwing': False, 'catch_rate': 0, 'anim': 'throw', 'frame': 0, 'caught': False, 'shakes': 0, 'pos':[-98,0]} 
+
 
 
                 if not ((ball['anim'] == 'shaking' and ball['throwing']) or (ball['pos'][0] > WIDTH * 0.759 and ball['throwing'])):
@@ -1186,9 +1203,23 @@ def main():
 
                     # Si pykemons K.O
                     if dresseur.Player.curr_creature.hp <= 0 and not fuite and GlobalDialog == []:
-                        GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
-                        fuite = True
-                        action = False
+                        IsTeamAlive = False
+                        for pkmn in dresseur.Player.team:
+                            if pkmn != None:
+                                if pkmn.hp > 0:
+                                    IsTeamAlive = True
+
+                        if not IsTeamAlive:
+                            GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
+                            fuite = True
+                            action = False
+                        else:
+                            if fight_color != DARK_GREEN:
+                                action = False
+                                checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                GlobalDialog = [f"{dresseur.Player.curr_creature.nick} est K-O !", "Choisissez un autre Pykemon."]
+                                fight_tab(DARK_GREEN)
+
                     if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
                         GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
@@ -1201,7 +1232,7 @@ def main():
                             
             
 
-                    if not action and not fuite and GlobalDialog == [] and CreatureAppeared == True: # on cache l'interface
+                    if not action and not fuite and GlobalDialog == [] and CreatureAppeared == True and fight_color != DARK_GREEN: # on cache l'interface
                         # boutons de jeu
                         for element in fight_ui:
                             rect = pygame.draw.rect(screen, element[0], element[1]) # screen, couleur, rect, titre
@@ -1276,19 +1307,55 @@ def main():
                                         
                                         fight_tab(GREEN)
                                     else:
-                                        if dresseur.Player.team[i].hp <= 0:
-                                            GlobalDialog = [f"{dresseur.Player.team[i].nick} n'a plus de PVs."]
+                                        if fight_menu['btns'][i] == 'change':
+                                            if fight_menu['pykemon'].hp <= 0:
+                                                GlobalDialog = [f"{fight_menu['pykemon'].nick} n'a plus de PVs."]
+                                            elif fight_menu['pykemon'] == dresseur.Player.curr_creature:
+                                                GlobalDialog = [f"{dresseur.Player.curr_creature.nick} est déjà au combat !"]
+                                            else:
+                                                pkmn_to_switch = dresseur.Player.curr_creature
+                                                dresseur.Player.curr_creature = fight_menu['pykemon']
+                                                action = True
+                                                checkup = {"p_atk": True, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                                GlobalDialog = [f"{pkmn_to_switch.nick}, reviens !"]
+                                                CreatureAppeared = False
+                                                
+                                                indice = 0 # on simule pour pas casser la condition suivante
+                                                
+                                                fight_tab(GREEN)
                                         else:
-                                            pkmn_to_switch = dresseur.Player.curr_creature
-                                            dresseur.Player.curr_creature = dresseur.Player.team[i]
-                                            action = True
-                                            checkup = {"p_atk": True, "adv_atk": False, "p_pp": False, "adv_pp": False}
-                                            GlobalDialog = [f"{pkmn_to_switch}, reviens !", f"{dresseur.Player.curr_creature}, Go !"]
-
-                                            
-                                            indice = 0 # on simule pour pas casser la condition suivante
-                                            
+                                            fight_menu['pykemon'] = None
                                             fight_tab(GREEN)
+
+                if fight_color == DARK_GREEN and GlobalDialog == []:
+                    for element in fight_ui:
+                        # menu d'attaques, sac etc.
+                        pygame.draw.rect(screen, fight_menu["color"], fight_menu["rect"]) #fight_menu est un dico
+                        screen.blit(fight_menu["title"],(WIDTH * 0.72, HEIGHT * 0.52))
+                    
+                    for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
+                        y_offset = HEIGHT * 0.58 + (i * HEIGHT * 0.06) if i < 3 else HEIGHT * 0.58 + ((i - 3) * HEIGHT * 0.06)
+                        x_offset = WIDTH * 0.72 if i < 3 else WIDTH * 0.72 + WIDTH * 0.127
+                        btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.05))
+                        screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                        #screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+                        pkmn = fight_menu["btns"][i]
+
+                        if btn.collidepoint(mouse_pos) and mouse_click and not action and GlobalDialog == [] and cooldown <= 0 and not ball["throwing"]:
+                            cooldown = 1
+                            if pkmn.hp <= 0:
+                                GlobalDialog = [f"{pkmn.nick} n'a plus de PVs."]
+                            elif pkmn == dresseur.Player.curr_creature:
+                                GlobalDialog = [f"{dresseur.Player.curr_creature.nick} est déjà au combat !"]
+                            else:
+                                pkmn_to_switch = dresseur.Player.curr_creature
+                                dresseur.Player.curr_creature = pkmn
+                                GlobalDialog = [f"{pkmn_to_switch.nick}, reviens !"]
+                                CreatureAppeared = False
+                                
+                                indice = 0 # on simule pour pas casser la condition suivante
+                                
+                                fight_tab(RED)
 
                 if ball["throwing"] and CreatureAppeared == True:
                     screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))
@@ -1340,10 +1407,8 @@ def main():
                         ball['pos'] = [WIDTH * 0.76, HEIGHT * 0.28]
 
                         if ball['frame'] == 14:
-                            assetsEntity(type = "npc", x = case * 6 - (case * 0.87), y = case * 5 - case // 3, map = "lil_garden",\
-                              state = 0, npc_name = "Infirmière", npc_dir = "u", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
-                             (100,100)), npc_team = None, reward = 100, npc_dialog = ["Je vais soigner tes Pykemons","...", "Et voila ils sont en pleine forme !"], npc_action = 4)
-                                #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur].shaking_snd.play()
+                            assets.shaking_snd.play()
+                            #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur].shaking_snd.play()
 
                         if ball['frame'] < 16 and ball['shakes'] > 0:
                             ball['frame'] += 1
@@ -1382,12 +1447,7 @@ def main():
                         ball['sprite'] = assets.balls[ball['type']][ball['frame']]
 
 
-                                        
-
-
-
-
-                elif action == True and GlobalDialog == [] and not ball['throwing']: # si action == True
+                elif action == True and GlobalDialog == [] and not ball['throwing'] and CreatureAppeared == True and cooldown <= 0: # si action == True
                     # le checkup permet de se situer dans la boucle
 
                     # on vérifie si les pykemons ont encore des pp (cas de lutte)

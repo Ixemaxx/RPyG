@@ -16,6 +16,56 @@
     "team": [
         {
             "name": "Punkromatides",
+            "nick": "Punky",
+            "hp": 24,
+            "max_hp": 24,
+            "lvl": 6,
+            "xp": 2.3,
+            "pps": [
+                40,
+                5,
+                15
+            ],
+            "shiny": 2,
+            "ball": "masterball",
+            "def": 120,
+            "atk": 120,
+            "speed": 2,
+            "req_xp": 34.559999999999995,
+            "moveset": [
+                [
+                    "Charge",
+                    20,
+                    40,
+                    100,
+                    "normal",
+                    "charge",
+                    "atk"
+                ],
+                [
+                    "Draco-M\u00e9t\u00e9ores",
+                    130,
+                    5,
+                    90,
+                    "dragon",
+                    "dracom",
+                    "atk2"
+                ],
+                [
+                    "Soins",
+                    130,
+                    5,
+                    90,
+                    "dragon",
+                    "heal",
+                    "atk2"
+                ]
+            ],
+            "status": null,
+            "type": "normal"
+        },
+        {
+            "name": "Punkromatides",
             "nick": "Punkromatides",
             "hp": 12,
             "max_hp": 12,
@@ -54,7 +104,6 @@
             "status": null,
             "type": "normal"
         },
-        null,
         null,
         null,
         null,

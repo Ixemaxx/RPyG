@@ -637,7 +637,8 @@ def fight_tab(tab):
                       #DMG, PP, Precision, type
                       "subtext": [pykfont.render(f" {dresseur.Player.curr_creature.pps[k]} / {dresseur.Player.curr_creature.moveset[k][2]} PP", True, WHITE if dresseur.Player.curr_creature.pps[k] > 0 else RED) for k in range(len(dresseur.Player.curr_creature.moveset))], 
                       "type": "fight",
-                      'bag_type': None}
+                      'bag_type': None,
+                      'pykemon': None}
         
         fight_color = fight_menu["color"]
         
@@ -654,7 +655,8 @@ def fight_tab(tab):
                         #DMG, PP, Precision, type
                         "subtext": [], 
                         "type": "bag",
-                        'bag_type': None}
+                        'bag_type': None,
+                        'pykemon': None}
         else:
             btns = []
             btns_text = []
@@ -676,6 +678,47 @@ def fight_tab(tab):
                 fight_menu['btns-text'] = btns_text
 
         fight_color = fight_menu["color"]
+
+    elif tab == GREEN:
+        rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
+        if fight_menu['pykemon'] == None:
+            fight_menu = {"rect": rect,
+                        "btns": ["heals","balls"],
+                        "title": font.render("Sac", True, WHITE),
+                        "color": YELLOW,
+                        "btns-text": [],
+                        #DMG, PP, Precision, type
+                        "subtext": [], 
+                        "type": "bag",
+                        'bag_type': None,
+                        'pykemon': None}
+            
+            for pkmn in dresseur.Player.team:
+                if pkmn == None:
+                    pass
+                else:
+                    fight_menu['btns-text'].append(pykfont.render(pkmn.nick, True, WHITE))
+                    fight_menu['subtext'].append(pykfont.render(f"{pkmn.hp} / {pkmn.max_hp}", True, WHITE))
+        else:
+            btns = []
+            btns_text = []
+            for pkmn in dresseur.Player.team:
+                if dresseur.Player.team.hp > 0:
+                    color = WHITE
+                else:
+                    color = RED
+                btns.append(pkmn)
+                btns_text.append(pykfont.render(f"PVs: {pkmn.hp} / {pkmn.max_hp}", True, color))
+
+            if btns == []:
+                fight_menu['pykemon'] = None
+                fight_tab[GREEN]
+            else:
+                fight_menu['btns'] = btns
+                fight_menu['btns-text'] = btns_text
+
+        fight_color = fight_menu["color"]
+
 
 def item_effect(item, pykemon, origin):
     
@@ -1217,6 +1260,35 @@ def main():
                                             indice = 0 # on simule pour pas casser la condition suivante
                                             
                                             fight_tab(YELLOW)
+
+                        elif fight_color == GREEN:
+                            for i in range(len(fight_menu["btns"])): # différents menus (fight, sac, etc.)
+                                y_offset = HEIGHT * 0.58 + (i * HEIGHT * 0.06) if i < 3 else HEIGHT * 0.58 + ((i - 3) * HEIGHT * 0.06)
+                                x_offset = WIDTH * 0.72 if i < 3 else WIDTH * 0.72 + WIDTH * 0.127
+                                btn = pygame.draw.rect(screen, BLACK, (x_offset, y_offset, WIDTH * 0.12, HEIGHT * 0.05))
+                                screen.blit(fight_menu["btns-text"][i], (x_offset + 10, y_offset + 10))
+                                #screen.blit(fight_menu["subtext"][i], (x_offset + 10, y_offset + 40))
+
+                                if btn.collidepoint(mouse_pos) and mouse_click and not action and GlobalDialog == [] and cooldown <= 0 and not ball["throwing"]:
+                                    cooldown = 1
+                                    if fight_menu['pykemon'] == None:
+                                        fight_menu['pykemon'] = fight_menu['btns'][i]
+                                        
+                                        fight_tab(GREEN)
+                                    else:
+                                        if dresseur.Player.team[i].hp <= 0:
+                                            GlobalDialog = [f"{dresseur.Player.team[i].nick} n'a plus de PVs."]
+                                        else:
+                                            pkmn_to_switch = dresseur.Player.curr_creature
+                                            dresseur.Player.curr_creature = dresseur.Player.team[i]
+                                            action = True
+                                            checkup = {"p_atk": True, "adv_atk": False, "p_pp": False, "adv_pp": False}
+                                            GlobalDialog = [f"{pkmn_to_switch}, reviens !", f"{dresseur.Player.curr_creature}, Go !"]
+
+                                            
+                                            indice = 0 # on simule pour pas casser la condition suivante
+                                            
+                                            fight_tab(GREEN)
 
                 if ball["throwing"] and CreatureAppeared == True:
                     screen.blit(ball['sprite'], (ball['pos'][0], ball['pos'][1]))

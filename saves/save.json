@@ -2,10 +2,10 @@
     "player_name": "Red",
     "map_id": "lil_garden",
     "player_pos": [
-        755.7266666666536,
-        452.83666666666295
+        718.8499999999871,
+        509.00333333332975
     ],
-    "player_dir": "d",
+    "player_dir": "l",
     "inventory": {
         "pykeball": 10,
         "potion": 5,

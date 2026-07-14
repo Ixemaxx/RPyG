@@ -13,7 +13,7 @@ import json # pour la sauvegarde
 pygame.init()
 pygame.mixer.init()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-pygame.mixer.music.set_volume(0.75)
+pygame.mixer.music.set_volume(0)
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -66,7 +66,7 @@ fight_end = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.68
+GameVersion = 0.71
 TabState = "Loading"
 
 cooldown = 0
@@ -300,8 +300,8 @@ def get_intro_anim(id):
 
 
 
-def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
-    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu, action, hp_p, hp_adv
+def set_menu(id): # [Fermer, pause, "pykemon","sac","pykedex","settings","online","save"]
+    global menu, menu_win, menu_color1, menu_color2, menu_colorh, btn_list, btn_txt_pos, menu_title_pos, menu_title, cooldown, TabState, sous_menu, action, hp_p, hp_adv, ordre_dico, relacher_dico
 
     menu = menus[id]
     sous_menu = None
@@ -329,7 +329,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
             btn_datas = [[GREEN,DARK_GREEN], [YELLOW,DARK_YELLOW], [(255,0,0),DARK_RED], [PINK, DARK_PINK], [BLUE, DARK_BLUE], [PURPLE, DARK_PURPLE]]
 
             menu_color1 = DARK_RED # fenetre du fond et texte dans les boutons
-            menu_color2 = RED # boutons et textes hors des boutons
+            menu_color2 = RED # boutons et textes horslvl_txt des boutons
             menu_colorh = (255,0,0)
 
             menu_title = "Menu principal"
@@ -363,7 +363,20 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
             btn_w = 0.8 * width
             btn_h = 0.7 * height
 
+            ordre_btn = pygame.Rect(WIDTH * 0.05, (HEIGHT * 0.15), btn_w * 0.7, 0.25 * height) # btn "ordre"
+            ordre_dico = {"state": False, "color": RED,"first": None, "second": None, "btn": ordre_btn, "ordre_txt": font.render("Ordonner", True, WHITE)} # dico pour gérer la gestion de l'odre de l'équipe
         
+            relacher_btn = pygame.Rect(WIDTH * 0.25, (HEIGHT * 0.15), btn_w * 0.7, 0.25 * height) # btn "ordre"
+            relacher_dico = {"state": False, "color": RED,"first": None, "btn": relacher_btn, "relacher_txt": font.render("Relâcher", True, WHITE)}
+
+            compteur_pkmn = 0
+            for pkmn in dresseur.Player.team:
+                if pkmn != None:
+                    compteur_pkmn += 1
+
+            if compteur_pkmn == 1:
+                ordre_dico["color"], relacher_dico["color"] = (50,50,50), (50,50,50)
+
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
             btn_list = [[dresseur.Player.team[i]] for i in range(6)] # on récupère les infos de l'équipe du joueur (None par défaut)
             btn_datas = [[(0,255,0),DARK_GREEN]]
@@ -380,6 +393,7 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
             btn_txt_y = HEIGHT * 0.3
             btn_txt_offest = HEIGHT * 0.09 # différence
 
+
             for i in range(len(btn_list)): # liste = [id, rect, texte, width, colors]
                 if i < 3:
                     rect = pygame.Rect((WIDTH * 0.05 * (i + 1)) + (i * btn_w), (HEIGHT * 0.25), btn_w, btn_h) # ligne 1 menu
@@ -387,15 +401,29 @@ def set_menu(id): # ["pykemon","sac","pykedex","settings","online","save"]
                     rect = pygame.Rect((WIDTH * 0.05 * (i - 2)) + ((i - 3) * btn_w), (HEIGHT * 0.55), btn_w, btn_h) # ligne 2 menu
 
                 try:
-                    name = str(btn_list[i][0].name)
-                    texte = font.render(name, True, WHITE)
+                    name = str(btn_list[i][0].nick)
+                    lvl = str(btn_list[i][0].lvl)
+                    name_txt = font.render(name, True, WHITE)
+                    lvl_txt = dia_font.render(f"Niv: {lvl}", True, WHITE)
+                    sprite = btn_list[i][0].sprite[0]
+                    sprite = pygame.transform.scale(sprite, (98, 98))
+                    life_data = dia_font.render(f"{btn_list[i][0].hp} / {btn_list[i][0].max_hp} PV", True, WHITE)
                 except:
-                    texte = font.render("Vide", True, WHITE)
+                    name_txt = font.render("Vide", True, WHITE)
+                    lvl_txt = font.render("", True, WHITE)
+                    life_data = font.render("", True, WHITE)
+                    sprite = pygame.transform.scale(assets.balls_tex, (0,0))
 
                 btn_list[i].append(rect)
-                btn_list[i].append(texte)
-                btn_list[i].append(texte.get_width())
+                btn_list[i].append(name_txt)
+                btn_list[i].append(name_txt.get_width())
                 btn_list[i].append(btn_datas[0])
+                btn_list[i].append(lvl_txt)
+                btn_list[i].append(lvl_txt.get_width())
+                btn_list[i].append(sprite)
+                btn_list[i].append(sprite.get_width())
+                btn_list[i].append(life_data)
+                btn_list[i].append(life_data.get_width())
 
 
             txt_w = 0 # largeur d'un texte, valeur déterminée dans la boucle principale
@@ -984,32 +1012,82 @@ def main():
                     pygame.draw.rect(screen, color2, btn[1]) # color2
                     screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
 
-            elif menu == "pykemon": # vue d'un seul pokémon de l'équipe
+            elif menu == "pykemon": # vue d'un seul pokémon ou de l'équipe
                 if sous_menu == None: # on vérifie le sous menu => None = équipe, 1 = vue d'un pokémon
                     for i, btn in enumerate(btn_list):
                         if btn[1].collidepoint(mouse_pos):
                             color2 = btn[4][0]
                             if mouse_click and cooldown <= 0 and not btn[0] == None: # si on clique sur un pokémon de l'équipe et que ce pokémon n'est pas vide
-                                cooldown = 1
-                                assets.menu_1_snd.play()
-                                sous_menu = i + 1 
-                                name = pykfont.render(f"PyKemon: {btn[0].name}",  True, WHITE)
-                                level = pykfont.render(f"Niveau: {str(btn[0].lvl)}", True, WHITE)
-                                moves = pykfont.render("Attaques:", True, WHITE)
-                                hp = pykfont.render(f"PVs: {btn[0].hp} / {btn[0].max_hp}", True, WHITE)
-                                atk = pykfont.render(f"Dégâts: {btn[0].attack}", True, WHITE)
-                                defense = pykfont.render(f"Défense: {btn[0].defense}", True, WHITE)
-                                types = pykfont.render(f"Type: {btn[0].type}", True, WHITE)
-                                sprite = btn[0].sprite[0] # sprite de face
-                                view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
-                                moveset = btn[0].moveset # pour chopper les infos des attaques
-                                pps = btn[0].pps
-                                tab_name = font.render("Infos Pykemon", WHITE, True)
-                                
+                                if ordre_dico["state"] == False and relacher_dico["state"] == False:
+                                    cooldown = 1
+                                    assets.menu_1_snd.play()
+                                    sous_menu = i + 1 
+                                    name = pykfont.render(f"PyKemon: {btn[0].nick}",  True, WHITE)
+                                    level = pykfont.render(f"Niveau: {str(btn[0].lvl)}", True, WHITE)
+                                    moves = pykfont.render("Attaques:", True, WHITE)
+                                    hp = pykfont.render(f"PVs: {btn[0].hp} / {btn[0].max_hp}", True, WHITE)
+                                    atk = pykfont.render(f"Dégâts: {btn[0].attack}", True, WHITE)
+                                    defense = pykfont.render(f"Défense: {btn[0].defense}", True, WHITE)
+                                    types = pykfont.render(f"Type: {btn[0].type}", True, WHITE)
+                                    sprite = btn[0].sprite[0] # sprite de face
+                                    view_rect = pygame.Rect(WIDTH * 0.025, HEIGHT * 0.15, WIDTH * 0.3, HEIGHT * 0.7)
+                                    moveset = btn[0].moveset # pour chopper les infos des attaques
+                                    pps = btn[0].pps
+                                    tab_name = font.render("Infos Pykemon", WHITE, True)
+                                else:
+                                    if ordre_dico["state"]: # ordonner
+                                        if ordre_dico["first"] == None:
+                                            ordre_dico["first"] = i
+                                            cooldown = 1
+                                        else:
+                                            ordre_dico["second"] = i
+                                            dresseur.Player.team[ordre_dico["first"]], dresseur.Player.team[ordre_dico["second"]] = dresseur.Player.team[ordre_dico["second"]], dresseur.Player.team[ordre_dico["first"]]
+                                            set_menu(2)
+                                    else: # relâcher
+                                        ordre_dico["first"] = i
+                                        dresseur.Player.team.pop(ordre_dico["first"])
+                                        dresseur.Player.team.append(None)
+                                        dresseur.Player.curr_creature = dresseur.Player.team[0]
+                                        set_menu(2)
+
                         else:
                             color2 = btn[4][1]
                         pygame.draw.rect(screen, color2, btn[1]) # color2
-                        screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) 
+                        screen.blit(btn[2], (btn[1].centerx - btn[3] // 2, btn[1][1] + 20)) # affiche le nom
+                        screen.blit(btn[5], (btn[1].centerx - btn[6] // 2, btn[1][1] + 190)) # affiche le niveau
+                        screen.blit(btn[9], (btn[1].centerx - btn[10] // 2, btn[1][1] + 160)) # affiche le niveau
+                        screen.blit(btn[7], (btn[1].centerx - btn[8] // 2, btn[1][1] + 60)) # affiche le sprite
+
+
+                    # boutons spéciaux
+                    if ordre_dico["color"] != (50,50,50): # si c'est gris, c'est qu'il reste un seul pykemon ds l'équipe (défini dans set menu => Pykemon)
+                        # bouton "ordonner"
+                        pygame.draw.rect(screen, ordre_dico["color"], ordre_dico["btn"])
+                        screen.blit(ordre_dico["ordre_txt"], (120, 182))
+                        if ordre_dico["btn"].collidepoint(mouse_pos) and mouse_click and cooldown <= 0:
+                            if relacher_dico["state"]:
+                                set_menu(2)
+                            cooldown = 1
+                            if ordre_dico["state"] == False:
+                                ordre_dico["state"] = True
+                                ordre_dico["color"] = BLUE
+                            else:
+                                set_menu(2)
+
+                        # bouton "relâcher"
+                        pygame.draw.rect(screen, relacher_dico["color"], relacher_dico["btn"])
+                        screen.blit(relacher_dico["relacher_txt"], (490, 182))
+                        if relacher_dico["btn"].collidepoint(mouse_pos) and mouse_click and cooldown <= 0:
+                            if ordre_dico["state"]:
+                                set_menu(2)
+
+                            cooldown = 1
+                            if relacher_dico["state"] == False:
+                                relacher_dico["state"] = True
+                                relacher_dico["color"] = BLUE
+                            else:
+                                set_menu(2)                         
+                       
                 else:
                     # Menu infos du pykemon
                     pygame.draw.rect(screen, menu_color1, view_rect)

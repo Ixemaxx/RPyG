@@ -24,7 +24,7 @@ special_tile = [2,3,5,70] # cases spéciales (bancs, hautes herbes)
 sp_tile_events = {2: ["banc",None], 3: ["banc",None], 5: ["grass","now"], 70: ["grass","now"]} # si l'event s'exécute sans la touche E, mettre comme 3e argument "now"
 
 tile_size = 1920 // 16
-
+unique_done = [] # liste de npc avec leurs actions uniques faites
 
 
 
@@ -50,7 +50,10 @@ class Dresseur(pygame.sprite.Sprite):
         self.username = username
         self.able = True #able définit la capacité du joueur à interagir avec son perso (bouger, parler aux pnj...)
         #création de l'équipe
-        self.team = [None for i in range(6)]
+        if team == None:
+            self.team = [None for i in range(6)]
+        else:
+            self.team = team
         self.speed = 300
         self.inv = {"pykeball": 10,
                      "superball": 5,
@@ -86,6 +89,7 @@ class Dresseur(pygame.sprite.Sprite):
         self.encounter = None
         self.snd_cooldown = 1
         self.dialog_end = False
+        self.type = None
         #self.hitbox_r = pygame.Rect(self.x + 98, self.y + 60, 50, 10)
         #self.hitbox_l = pygame.Rect(self.x - 50, self.y + 60, 50, 10)
         #self.hitbox_u = pygame.Rect(self.x + 49, self.y - 49, 10, 50)
@@ -225,7 +229,10 @@ class Dresseur(pygame.sprite.Sprite):
             if type == "npc":
                 assets.dialog_snd.play()
                 interact.npc.animate_dresseur(f"idle_{interact.npc.dir}")
-                self.dialog = [interact.dialog, interact.action, interact.npc.username]
+                if not interact.npc.username in unique_done:
+                    self.dialog = [interact.dialog, interact.action, interact.npc.username]
+                else:
+                    self.dialog = [interact.post_dialog, interact.action, interact.npc.username]
                 interact.make_action()
                 self.able = False
             

@@ -119,6 +119,7 @@ frame = 0
 action = False
 hp_cooldown = 0
 EmergencyHeal = False
+IsTrainerFight = False
 
 # vars balls
 
@@ -135,7 +136,6 @@ hp_adv = pykfont.render("-- / -- PV", True, WHITE)
 p_color = GREEN
 adv_color = GREEN
 stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
-
 
 
 # Image de fond
@@ -162,12 +162,11 @@ def emergency_heal():
     dresseur.Player.able = False
     EmergencyHeal = False
 
-    
-
 
 
 
 def save_game(): # IA
+    global GlobalDialog
     # Préparation des données de l'équipe
     team_data = []
     for pkm in dresseur.Player.team:
@@ -199,14 +198,16 @@ def save_game(): # IA
         "player_pos": [dresseur.Player.x, dresseur.Player.y],
         "player_dir": dresseur.Player.dir,
         "inventory": dresseur.Player.inv,
-        "team": team_data
+        "team": team_data,
+        "unique": dresseur.unique_done
     }
 
     with open("saves/save.json", "w") as f:
         json.dump(save_data, f, indent=4)
-    print("Partie sauvegardée !")
+    GlobalDialog = ["Partie sauvegardée !"]
 
 def reset_game():
+    global GlobalDialog
     try:
         with open("saves/template.json", "r") as f:
             data = json.load(f)
@@ -216,9 +217,10 @@ def reset_game():
 
         load_game("save")
     except:
-        print("Erreur de reset, données conservées")
+        GlobalDialog = ["Erreur de reset, données conservées"]
 
 def load_game(file): # IA
+    global GlobalDialog
     try:
         with open(f"saves/{file}.json", "r") as f:
             data = json.load(f)
@@ -241,7 +243,6 @@ def load_game(file): # IA
             if pkm_data is not None:
                 # On tente de créer l'objet de base
                 new_pkm = pkmns.base_copy(pkm_data["name"]) 
-                print(new_pkm)
                 
                 # SÉCURITÉ : On vérifie que new_pkm n'est pas None
                 if new_pkm is not None:
@@ -272,8 +273,11 @@ def load_game(file): # IA
         
         # Mise à jour de la créature active (celle qui sort en premier)
         dresseur.Player.curr_creature = dresseur.Player.team[0]
+
+        # Moi - Maj de la liste des npc uniques avec lesquels on a déjà interragis (ex: combats, échange etc.)
+        dresseur.unique_done = data["unique"]
         
-        print(f"Content de te revoir, {dresseur.Player.username}. Partie chargée !")
+        GlobalDialog = [f"Content de te revoir, {dresseur.Player.username}. Partie chargée !"]
         
     except FileNotFoundError:
         print("Erreur : Aucun fichier de sauvegarde trouvé.")
@@ -299,8 +303,13 @@ def set_phase(new_phase, encounter=None):
         IntroDone = False
         intro = True
         frame = 0
-        dresseur.Player.encounter = encounter
-        TabState = f"Combat contre..."
+        if not entity_mgr.fight["state"]:
+            dresseur.Player.encounter = encounter
+            TabState = f"Combat contre..."
+        else:
+            TabState = f"Combat contre {entity_mgr.fight["trainer"].username}"
+            dresseur.Player.encounter = entity_mgr.fight["trainer"].curr_creature
+            fight_tab(RED)
         pygame.mixer.music.stop()
         assets.wild_snd.play()
         pygame.mixer.music.load("sounds/encounter.mp3")  # Charger la musique
@@ -680,11 +689,14 @@ def fight_tab(tab):
 
 
     if tab == BLUE: # fuite
-        if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
-            GlobalDialog = ["Vous prenez la fuite !"]
-            fuite = True
+        if not entity_mgr.fight["state"]:
+            if random.randint(1,100) >= 5: # 95% de chances de s'enfuir
+                GlobalDialog = ["Vous prenez la fuite !"]
+                fuite = True
+            else:
+                GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
         else:
-            GlobalDialog = ["Vous n'avez pas réussi à fuir !"]
+            GlobalDialog = ["On ne s'enfuit pas lors d'un combat de dresseurs !", "Flipette."]
 
     elif tab == RED:
         rect = pygame.Rect(WIDTH * 0.7, HEIGHT * 0.5, WIDTH * 0.3, HEIGHT * 0.3)
@@ -907,7 +919,7 @@ def fight_round(prefix_l, canPlay, checkup, choice):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball, fight_end, EmergencyHeal
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball, fight_end, EmergencyHeal, IsTrainerFight
 
     clock = pygame.time.Clock()
     running = True
@@ -985,6 +997,7 @@ def main():
                         set_phase("fight", encounter=entity.get_creature())
                         
                         fight_tab(RED)
+                
 
             #for entity in entity_mgr.entities:
             #    try:
@@ -1001,6 +1014,8 @@ def main():
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
             if EmergencyHeal:
                 emergency_heal()
+            if entity_mgr.fight["state"] == True and dresseur.Player.dialog == []:
+                set_phase("fight")
                 
             
 
@@ -1234,8 +1249,12 @@ def main():
                 IsFightThemeStarted = False
                 CreatureAppeared = False
             elif not intro and not IntroDone:
-                TabState = f"Combat contre {dresseur.Player.encounter.name}"
-                GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
+                if entity_mgr.fight["state"] == False:
+                    TabState = f"Combat contre {dresseur.Player.encounter.name}"
+                    GlobalDialog = [f"Un {dresseur.Player.encounter.name} sauvage apparait !"]
+                else:
+                    TabState = f"Combat contre {entity_mgr.fight["trainer"].username}"
+                    GlobalDialog = [f"{entity_mgr.fight["trainer"].username} envoie un {entity_mgr.fight["trainer"].curr_creature.nick}"]
 
             if not IsFightThemeStarted and not pygame.mixer.get_busy():
                     pygame.mixer.music.play(loops=-1, start=0.0)
@@ -1330,21 +1349,56 @@ def main():
                             fuite = True
                             action = False
                             EmergencyHeal = True
+                            if entity_mgr.fight["state"]:
+                                for pkmn in entity_mgr.fight["trainer"].team:
+                                    if pkmn != None:
+                                        pkmn.hp = pkmn.max_hp
+                                        for i in range(len(pkmn.moveset)):
+                                            pkmn.pps[i] = pkmn.moveset[i][2]
+                            entity_mgr.fight["state"] = False
                         else:
                             if fight_color != DARK_GREEN:
                                 action = False
                                 checkup = {"p_atk": False, "adv_atk": False, "p_pp": False, "adv_pp": False}
-                                GlobalDialog = [f"{dresseur.Player.curr_creature.nick} est K-O !", "Choisissez un autre Pykemon."]
+                                GlobalDialog = [f"{dresseur.Player.curr_creature.nick} est K.O !", "Choisissez un autre Pykemon."]
                                 fight_tab(DARK_GREEN)
 
                     if dresseur.Player.encounter.hp <= 0 and GlobalDialog == []:
                         exp = max(dresseur.Player.encounter.lvl - dresseur.Player.curr_creature.lvl, 1) * random.randint(20, 30)
-                        GlobalDialog = [f"Le {dresseur.Player.encounter.name} adverse est K.O !", f"Vous gagnez {exp} points d'Exp."]
                         dresseur.Player.curr_creature.xp += exp
                         assets.exp_snd.play()
 
-                        action = False
-                        fight_end = True
+                        if entity_mgr.fight["state"] == False:
+                            action = False
+                            fight_end = True
+                            GlobalDialog = [f"Le {dresseur.Player.encounter.nick} sauvage est K.O !", f"Vous gagnez {exp} points d'Exp."]
+
+                        elif entity_mgr.fight["state"] == True:
+                            dead = True
+                            firstAlive = None
+
+                            for i in range(len(entity_mgr.fight["trainer"].team)):
+                                if entity_mgr.fight["trainer"].team[i] != None:
+                                    if entity_mgr.fight["trainer"].team[i].hp > 0:
+                                        dead = False
+                                        if firstAlive == None:
+                                            firstAlive = i 
+
+                            
+                            if dead:
+                                action = False
+                                fight_end = True
+                                entity_mgr.fight["state"] = False
+                                GlobalDialog = [f"Le {dresseur.Player.encounter.nick} adverse est K.O !", f"Vous gagnez {exp} points d'Exp.", f"Vous avez battu {entity_mgr.fight["trainer"].username} !"]
+                                dresseur.unique_done.append(entity_mgr.fight["trainer"].username)
+                            else:
+                                entity_mgr.fight["trainer"].curr_creature = entity_mgr.fight["trainer"].team[firstAlive]
+                                GlobalDialog = [f"Le {dresseur.Player.encounter.nick} adverse est K.O !", f"Vous gagnez {exp} points d'Exp.", f"{entity_mgr.fight["trainer"].username} envoie {entity_mgr.fight["trainer"].curr_creature.nick}"]
+                                checkup["p_atk"], checkup["adv_atk"] = False, False
+                                dresseur.Player.encounter = entity_mgr.fight["trainer"].curr_creature
+                                fight_tab(RED)
+
+
                         
                             
             

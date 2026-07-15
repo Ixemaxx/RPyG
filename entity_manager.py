@@ -14,12 +14,12 @@ entities = []
 case = 120 # côté d'une tile
 all_sprites = pygame.sprite.Group()
 
-fight = None
+fight = {"state": False, "trainer": None, "trainer_type": None}
 
 class Entity(pygame.sprite.Sprite):
     def __init__(self, type, x, y, map, state, npc_name=None, npc_dir=None, npc_sprite=None, npc_team=None, reward=None, npc_dialog = None, 
                  npc_action = 0, npc_hitbox=None, warp_dest=None, warp_tp=None, warp_name=None, warp_dir=None, req_dir=None, hitbox_w=None,hitbox_h=None,
-                 grass_creatures=None, grass_levels=None):
+                 grass_creatures=None, grass_levels=None, unique_action=False, post_dialog=None):
         
         super().__init__() # on initialise pygame.sprite.Sprite, pour créer un groupe de sprites
         self.x = x
@@ -29,7 +29,8 @@ class Entity(pygame.sprite.Sprite):
         self.state = state # 0 => item non récupéré ou npc jamais rencontré ou combat de dresseur perdu. Sinon 1
         self.map = map # map dans laquelle l'entité apparait
         self.req_dir = req_dir # direction requise pour interagir avec l'entité
-        
+        self.unique_action = unique_action # booléen pour savoir si une action unique a été faite (ex: combat, échange pokémon)
+        self.post_dialog = post_dialog
 
         if type == "npc":
             if npc_hitbox != None:
@@ -41,6 +42,9 @@ class Entity(pygame.sprite.Sprite):
             self.npc.extract_anim() 
             self.npc.update(keys=0, dt=0, map=None, entities=None)
             self.npc.update_selfbox()
+
+            # type de npc (si jamais on veut différencier un champion, rival etc.)
+            self.npc.type = "trainer" # pour la release il n'y aura que des trainers
 
             # pour le spritegroup
             self.image = self.npc.sprite
@@ -81,7 +85,11 @@ class Entity(pygame.sprite.Sprite):
             self.hitbox.topleft = (self.x, self.y) # Met à jour la position de la hitbox
 
     def make_action(self):
+        global fight
         # dialogue 0, combat 1, échange 2, cadeau 3
+        if self.action == 1:
+            if self.npc.username not in dresseur.unique_done:
+                fight = {"state": True, "trainer": self.npc, "trainer_type": self.npc.type}        
         if self.action == 4:
             for pkmn in dresseur.Player.team:
                 if pkmn != None:
@@ -123,8 +131,8 @@ entities.append(nurse_npc)
 dresseur_npc = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 2 - case // 2, map = "lil_garden",\
                               state = 0, npc_name = "Dresseur", npc_dir = "l", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/player.png").convert_alpha(),\
                              (100,100)), 
-                             npc_team = ["Punkromatides", 12, 6, 6, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [pkmns.moves["charge"], pkmns.moves["dracom"]], "normal", 2, 20 , "lil_garden", 6],
-                               reward = 100, npc_dialog = ["TU ME CACHES LA VUE SUR LE PAYSAGE !", "Battons nous !"], npc_action = 4)
+                             npc_team = [pkmns.Creature("Paillasson", 12, 2, 2, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [pkmns.moves["charge"], pkmns.moves["dracom"]], "normal", 2, 20 , "lil_garden", 2), pkmns.Creature("Round Up", 28, 18, 18, [pygame.image.load("sprites/creatures/kackaburr_front.png").convert_alpha(), pygame.image.load("sprites/creatures/kackaburr_back.png").convert_alpha()], [pkmns.moves["charge"], pkmns.moves["dracom"], pkmns.moves["heal"]], "normal", 10, 999 , "lil_garden", 18), None, None, None, None],
+                               reward = 100, npc_dialog = ["TU ME CACHES LA VUE SUR LE PAYSAGE !", "Battons nous !"], post_dialog = ["Pas la peine de sourire non plus..."],npc_action = 1)
                                 #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
 

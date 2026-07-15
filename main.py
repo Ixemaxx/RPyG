@@ -66,7 +66,7 @@ fight_end = False
 
 fps = 0
 GameName = "PyKemon"
-GameVersion = 0.72
+GameVersion = 1.0
 TabState = "Loading"
 
 cooldown = 0

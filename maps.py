@@ -20,6 +20,7 @@ rotation = [0, 90, 180, 270] # rotation en degrés à appliquer
 
 SectionName = {"lil_garden": "Route 1", "lil_house": "Ma Maison", "pkmn_center": "Centre Pykémon"}
 Building = ["lil_house", "pkmn_center"]
+map_id = None
 
 
 def tilemap_manager():
@@ -58,8 +59,9 @@ def draw_map():
     return map_surface
 
 def change_map(new_map,new_name):
-    global map, map_id, map_layer, isNewMap
+    global map, map_id, map_layer, isNewMap, prevmap
 
+    prevmap = map_id
     map = new_map
     map_id = new_name
     map_layer = draw_map()

@@ -11,7 +11,7 @@ pygame.display.set_mode((1920, 1080))
 moves = {"charge": ["Charge", 20, 40, 100, "normal", "charge", "atk"],
          "dracom": ["Draco-Météores", 130, 5, 90, "dragon", "dracom", "atk2"],
          "trempette": ["Trempette", 0, 1, 35, "eau", "trempette", None],
-         "soin": ["Soin", 0, 5, 100, "normal", "soin", "heal"],
+         "heal": ["Soin", 0, 5, 100, "normal", "soin", "heal"],
          "lutte": ["Lutte", 50, 1, 100, "normal", "lutte", "lutte"]
          }
 

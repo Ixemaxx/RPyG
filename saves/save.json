@@ -1,9 +1,9 @@
 {
     "player_name": "Red",
-    "map_id": "lil_garden",
+    "map_id": "pkmn_center",
     "player_pos": [
-        718.8499999999871,
-        509.00333333332975
+        898.9600000000005,
+        675.1333333333342
     ],
     "player_dir": "l",
     "inventory": {
@@ -24,7 +24,7 @@
             "pps": [
                 40,
                 5,
-                15
+                5
             ],
             "shiny": 2,
             "ball": "masterball",

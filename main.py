@@ -13,7 +13,7 @@ import json # pour la sauvegarde
 pygame.init()
 pygame.mixer.init()
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-pygame.mixer.music.set_volume(0)
+pygame.mixer.music.set_volume(0.75)
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -96,7 +96,7 @@ GlobalDialog = [] # variable de dialogue non reliée au joueur, en combat par ex
 # vars menu
 
 menu = "None"
-menus = ["None","pause","pykemon","sac","pykedex","settings","online","save"]
+menus = ["None","pause","pykemon","sac","settings","save"]
 btn_specs = {"save":"SAUVEGARDER",
             "settings":"PARAMETRES",
             "sac": "SAC",
@@ -118,6 +118,7 @@ fight_bg = fight_intro[0]
 frame = 0
 action = False
 hp_cooldown = 0
+EmergencyHeal = False
 
 # vars balls
 
@@ -142,6 +143,28 @@ stats_ui = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
 #bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
 fps = 0
 pygame.display.set_caption(f'FPS: {fps} - {GameName} v{GameVersion} - {TabState}')
+
+def emergency_heal():
+    global EmergencyHeal
+
+    maps.change_map(maps.pkmn_center,"pkmn_center")
+    dresseur.Player.x = WIDTH // 2 - 50
+    dresseur.Player.y = 330
+    dresseur.Player.dir = "u"
+    dresseur.Player.sprite_sheet = dresseur.player_sheet
+    dresseur.Player.extract_anim()
+    dresseur.Player.animate_dresseur("idle_u")
+    assets.dialog_snd.play()
+    nurse = entity_mgr.entities[1]
+    nurse.npc.animate_dresseur(f"idle_{nurse.npc.dir}")
+    dresseur.Player.dialog = [nurse.dialog, nurse.action, nurse.npc.username]
+    nurse.make_action()
+    dresseur.Player.able = False
+    EmergencyHeal = False
+
+    
+
+
 
 
 def save_game(): # IA
@@ -263,7 +286,7 @@ def load_game(file): # IA
 
 
 def set_phase(new_phase, encounter=None):
-    global phase, bg_color, TabState, intro, frame, IntroDone
+    global phase, bg_color, TabState, intro, frame, IntroDone, EmergencyHeal
 
     phase = new_phase
 
@@ -283,6 +306,14 @@ def set_phase(new_phase, encounter=None):
         pygame.mixer.music.load("sounds/encounter.mp3")  # Charger la musique
 
 
+def get_map_music():
+    if maps.map_id == "pkmn_center":
+        pygame.mixer.music.load("sounds/pkmncenter.mp3")
+        pygame.mixer.music.play()
+    elif maps.map_id == "lil_garden":
+        if maps.prevmap != "lil_house":
+            pygame.mixer.music.load("sounds/town.mp3")
+            pygame.mixer.music.play()
 
         
 
@@ -325,7 +356,7 @@ def set_menu(id): # [Fermer, pause, "pykemon","sac","pykedex","settings","online
 
         
             menu_win = pygame.Rect(0, 0, WIDTH, HEIGHT)
-            btn_list=[["pykemon"],["sac"],["pykedex"],["settings"],["online"],["save"]]
+            btn_list=[["pykemon"],["sac"],["settings"],["save"]]
             btn_datas = [[GREEN,DARK_GREEN], [YELLOW,DARK_YELLOW], [(255,0,0),DARK_RED], [PINK, DARK_PINK], [BLUE, DARK_BLUE], [PURPLE, DARK_PURPLE]]
 
             menu_color1 = DARK_RED # fenetre du fond et texte dans les boutons
@@ -876,7 +907,7 @@ def fight_round(prefix_l, canPlay, checkup, choice):
 # BOUCLE PRINCIPALE
 
 def main():
-    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball, fight_end
+    global fps, cooldown, menu, sous_menu, TabState, GameName, GameVersion, map, map_blit, dialog_cooldown, close_tab_color, GlobalDialog, IntroDone, fuite, fight_color, action, stats_ui, ball, fight_end, EmergencyHeal
 
     clock = pygame.time.Clock()
     running = True
@@ -927,6 +958,7 @@ def main():
             # 2. On reconstruit map_blit pour que screen.blit(map_blit) affiche le nouveau décor
             pack_map()
             current_entities = entity_mgr.get_curr_entities(maps.map_id)
+            get_map_music()
 
     
 
@@ -967,6 +999,8 @@ def main():
                 pass
                 
             screen.blit(dresseur.Player.sprite,(dresseur.Player.x, dresseur.Player.y)) #round pour éviter les tp du joueur
+            if EmergencyHeal:
+                emergency_heal()
                 
             
 
@@ -1036,6 +1070,7 @@ def main():
                                     tab_name = font.render("Infos Pykemon", WHITE, True)
                                 else:
                                     if ordre_dico["state"]: # ordonner
+                                        assets.menu_1_snd.play()
                                         if ordre_dico["first"] == None:
                                             ordre_dico["first"] = i
                                             cooldown = 1
@@ -1044,6 +1079,7 @@ def main():
                                             dresseur.Player.team[ordre_dico["first"]], dresseur.Player.team[ordre_dico["second"]] = dresseur.Player.team[ordre_dico["second"]], dresseur.Player.team[ordre_dico["first"]]
                                             set_menu(2)
                                     else: # relâcher
+                                        assets.menu_1_snd.play()
                                         ordre_dico["first"] = i
                                         dresseur.Player.team.pop(ordre_dico["first"])
                                         dresseur.Player.team.append(None)
@@ -1065,6 +1101,7 @@ def main():
                         pygame.draw.rect(screen, ordre_dico["color"], ordre_dico["btn"])
                         screen.blit(ordre_dico["ordre_txt"], (120, 182))
                         if ordre_dico["btn"].collidepoint(mouse_pos) and mouse_click and cooldown <= 0:
+                            assets.menu_1_snd.play()
                             if relacher_dico["state"]:
                                 set_menu(2)
                             cooldown = 1
@@ -1078,6 +1115,7 @@ def main():
                         pygame.draw.rect(screen, relacher_dico["color"], relacher_dico["btn"])
                         screen.blit(relacher_dico["relacher_txt"], (490, 182))
                         if relacher_dico["btn"].collidepoint(mouse_pos) and mouse_click and cooldown <= 0:
+                            assets.menu_1_snd.play()
                             if ordre_dico["state"]:
                                 set_menu(2)
 
@@ -1186,7 +1224,7 @@ def main():
 
                     
             else: 
-                print("menu inconnu")
+                print(f"menu inconnu: {menu}")
 
 
         elif phase == "fight":
@@ -1288,9 +1326,10 @@ def main():
                                     IsTeamAlive = True
 
                         if not IsTeamAlive:
-                            GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous prenez la fuite !"]
+                            GlobalDialog = ["Vous n'avez plus de PyKemon en état de se battre. ", "Vous partez les soigner au centre PyKemon", "Le plus proche !"]
                             fuite = True
                             action = False
+                            EmergencyHeal = True
                         else:
                             if fight_color != DARK_GREEN:
                                 action = False

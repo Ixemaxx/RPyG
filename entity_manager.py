@@ -113,8 +113,8 @@ mom_npc = Entity(type = "npc", x = case * 9 - (case * 0.87), y = case * 5 - case
 
 entities.append(mom_npc)
 
-nurse_npc = Entity(type = "npc", x = case * 6 - (case * 0.87), y = case * 5 - case // 3, map = "lil_garden",\
-                              state = 0, npc_name = "Infirmière", npc_dir = "u", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
+nurse_npc = Entity(type = "npc", x = case * 8.35 - (case * 0.87), y = case * 2.25 - case // 3, map = "pkmn_center",\
+                              state = 0, npc_name = "Infirmière", npc_dir = "d", npc_sprite = pygame.transform.scale(pygame.image.load("sprites/persos/mom.png").convert_alpha(),\
                              (100,100)), npc_team = None, reward = 100, npc_dialog = ["Je vais soigner tes Pykemons","...", "Et voila ils sont en pleine forme !"], npc_action = 4)
                                 #npc_hitbox = [0, 0, 98, 98]) # selfbox est de la forme [self.x +i, self.y + j, largeur, hauteur]
 
@@ -160,3 +160,4 @@ pkmn_center_out = Entity(type = "warp", x = case * 6, y = case * 8.95 , map = "p
 entities.append(pkmn_center_out)
 
 all_sprites = get_curr_entities(maps.map_id)
+
